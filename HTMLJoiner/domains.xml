@@ -1,0 +1,7 @@
+﻿<?xml version="1.0" encoding="utf-8" ?>
+<domains>
+  <domain name="www.wired.com" content="container"/>
+  <domain name="www.linuxjournal.com" content="content-inner"/>
+  <domain name="arstechnica.com" content="article-guts"/>
+  <domain name="www.technologyreview.com" tag="section" type="class" content="body"/>
+</domains>
