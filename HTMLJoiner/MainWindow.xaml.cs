@@ -25,6 +25,28 @@ using System.Xml.Linq;
 
 namespace HTMLJoiner
 {
+
+    public class TagData
+    {
+        string name, tag, type, content;
+
+        public TagData() { }
+
+        public TagData(string name, string tag, string type, string content)
+        {
+            this.name = name;
+            this.tag = tag;
+            this.type = type;
+            this.content = content;
+        }
+
+
+        public string Name { get; set; }
+        public string Tag { get; set; }
+        public string Type { get; set; }
+        public string Content { get; set; }
+    }
+
     /// <summary>
     /// Interaction logic for MainWindow.xaml
     /// </summary>
@@ -65,7 +87,8 @@ namespace HTMLJoiner
 
         private void SaveFile_Click(object sender, RoutedEventArgs e)
         {
-            if (Items.SelectedItems.Count > 0)
+            if (true)
+            //if (Items.SelectedItems.Count > 0)
             {
                 SaveFileDialog save = new SaveFileDialog();
                 save.AddExtension = true;
@@ -73,7 +96,8 @@ namespace HTMLJoiner
                 save.Filter = "HTML Files|*.htm;*.html";
                 save.FileName = System.IO.Path.GetFileName(Items.SelectedItems[0].ToString());
 
-                if ((bool)save.ShowDialog())
+                //if ((bool)save.ShowDialog())
+                if (true)
                 {
                     domains = LoadDomains();
 
@@ -89,13 +113,27 @@ namespace HTMLJoiner
                             doc.Load(file.ToString());
 
                             string domain = GetDomain(doc);
-                            string tag = GetContentTag(domains, domain);
+                            TagData tag = GetContentTag(domains, domain);
 
                             //If the tag is not empty then we know what we are searching for so we use it
-                            if (!string.IsNullOrEmpty(tag))
+                            if (!string.IsNullOrEmpty(tag.Content) && string.IsNullOrEmpty(tag.Tag))
                             {
                                 content = doc.DocumentNode.Descendants()
-                                   .Where(x => x.Id == tag).FirstOrDefault();
+                                   .Where(x => x.Id == tag.Content).FirstOrDefault();
+                            }
+                            else if (!string.IsNullOrEmpty(tag.Content) && !string.IsNullOrEmpty(tag.Tag))
+                            {
+                                content = doc.DocumentNode.Descendants()
+                                    .Where(x => x.Name == tag.Tag).FirstOrDefault();
+
+                                var tolo = doc.DocumentNode.Descendants()
+                                    .Where(x => x.Name == tag.Tag);
+
+                                foreach (var item in tolo)
+                                {
+                                    var tol = item.Attributes.Where(x => x.Name == tag.Type && x.Value == tag.Content);
+                                }
+
                             }
                             else
                             {
@@ -170,31 +208,6 @@ namespace HTMLJoiner
             }
         }
 
-        public static void AddDomainToFile(string Id, string domain)
-        {
-            XElement site = new XElement("name",
-                new XAttribute("domain", domain),
-                new XAttribute("content", Id));
-
-            domains.Root.Add(site);
-
-            domains.Save(ConfigurationManager.AppSettings["path"]);
-        }
-
-        public static void AddDomainToFile(string domain, string tag, string type, string content)
-        {
-            XElement site = new XElement("name",
-                new XAttribute("domain", domain),
-                new XAttribute("tag", tag),
-                new XAttribute("type", type),
-                new XAttribute("content", content ));
-
-            domains.Root.Add(site);
-
-            domains.Save(ConfigurationManager.AppSettings["path"]);
-        }
-
-
         private void Clear_Click(object sender, RoutedEventArgs e)
         {
             ItemList.Clear();
@@ -212,6 +225,35 @@ namespace HTMLJoiner
 
         }
 
+        public static void AddDomainToFile(string Id, string domain)
+        {
+            XElement site = new XElement("name",
+                new XAttribute("domain", domain),
+                new XAttribute("content", Id));
+
+            domains.Root.Add(site);
+
+            domains.Save(ConfigurationManager.AppSettings["path"]);
+        }
+
+        public static void AddDomainToFile(string domain, string tag, string type, string content)
+        {
+            XElement site = new XElement("name",
+                new XAttribute("domain", domain),
+                new XAttribute("tag", tag),
+                new XAttribute("type", type),
+                new XAttribute("content", content));
+
+            domains.Root.Add(site);
+
+            domains.Save(ConfigurationManager.AppSettings["path"]);
+        }
+
+        /// <summary>
+        /// Grab the domain from which the web page was saved.
+        /// </summary>
+        /// <param name="doc"></param>
+        /// <returns></returns>
         private static string GetDomain(HtmlDocument doc)
         {
             var domain = doc.DocumentNode.ChildNodes
@@ -223,22 +265,38 @@ namespace HTMLJoiner
             return domain;
         }
 
-        private static string GetContentTag(XDocument domains, string domain)
+        /// <summary>
+        /// Get the HTML tag that has the content, i.e. the meat of the article.
+        /// </summary>
+        /// <param name="domains">File containing all the domains that have been successfully processed</param>
+        /// <param name="domain">Domain to check</param>
+        /// <returns></returns>
+        private static TagData GetContentTag(XDocument domains, string domain)
         {
-            string result = string.Empty;
+            TagData result = new TagData();
 
-            var tag = domains.Root.Descendants()
-                .Where(x => x.Name == domain)
-                .Select(x => x.Attribute("content")).FirstOrDefault();
+            var content = domains.Root.Descendants()
+                .Where(x => x.Attribute("name").Value == domain).FirstOrDefault();
 
-            if (tag != null)
+            if (content != null)
             {
-                result = tag.ToString();
+                result.Content = content.Attributes("content").FirstOrDefault().Value;
+                result.Name = content.Attributes("name").FirstOrDefault().Value;
+                result.Tag = content.Attributes("tag").FirstOrDefault() == null ?
+                    string.Empty : content.Attributes("tag").FirstOrDefault().Value;
+                result.Type = content.Attributes("type").FirstOrDefault() == null ?
+                    string.Empty : content.Attributes("type").FirstOrDefault().Value;
+
             }
 
             return result;
         }
 
+        /// <summary>
+        /// Load the file containing the sucessfully processed web pages (by domain).
+        /// This rather assumes CMS on the domain, which is probably a fair assumption.
+        /// </summary>
+        /// <returns></returns>
         private static XDocument LoadDomains()
         {
             return XDocument.Load(ConfigurationManager.AppSettings["path"]);
@@ -256,7 +314,7 @@ namespace HTMLJoiner
             }
         }
 
-
+        //NOT in USE
         private HtmlNode FindInner(HtmlNode node)
         {
             HtmlNode result = null;
