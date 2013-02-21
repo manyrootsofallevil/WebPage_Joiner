@@ -87,8 +87,8 @@ namespace HTMLJoiner
 
         private void SaveFile_Click(object sender, RoutedEventArgs e)
         {
-            if (true)
-            //if (Items.SelectedItems.Count > 0)
+
+            if (Items.SelectedItems.Count > 0)
             {
                 SaveFileDialog save = new SaveFileDialog();
                 save.AddExtension = true;
@@ -96,18 +96,20 @@ namespace HTMLJoiner
                 save.Filter = "HTML Files|*.htm;*.html";
                 save.FileName = System.IO.Path.GetFileName(Items.SelectedItems[0].ToString());
 
-                //if ((bool)save.ShowDialog())
-                if (true)
+                if ((bool)save.ShowDialog())
                 {
-                    domains = LoadDomains();
-
-                    HtmlDocument doc = new HtmlDocument();
-
                     try
                     {
+                        HtmlDocument doc = new HtmlDocument();
+
                         foreach (var file in Items.SelectedItems)
                         {
-                            HtmlNode content;
+
+                            //Allthough this is inefficient, it ensures that it will process recently added domains correctly
+                            //TODO: Look for a better way
+                            domains = LoadDomains();
+
+                            HtmlNode content = null;
                             HtmlAttribute attribute = null;
 
                             doc.Load(file.ToString());
@@ -121,42 +123,34 @@ namespace HTMLJoiner
                                 content = doc.DocumentNode.Descendants()
                                    .Where(x => x.Id == tag.Content).FirstOrDefault();
                             }
+                            //Clearly this is sub optimal, but there you go for the time being.
+                            //TODO:Improve.
                             else if (!string.IsNullOrEmpty(tag.Content) && !string.IsNullOrEmpty(tag.Tag))
                             {
-                                content = doc.DocumentNode.Descendants()
-                                    .Where(x => x.Name == tag.Tag).FirstOrDefault();
-
-                                var tolo = doc.DocumentNode.Descendants()
+                                var tags = doc.DocumentNode.Descendants()
                                     .Where(x => x.Name == tag.Tag);
 
-                                foreach (var item in tolo)
+                                foreach (var item in tags)
                                 {
-                                    var tol = item.Attributes.Where(x => x.Name == tag.Type && x.Value == tag.Content);
-                                }
+                                    var relevantTag = item.Attributes.Where(x => x.Name == tag.Type && x.Value == tag.Content).FirstOrDefault();
 
+                                    if (relevantTag != null)
+                                    {
+                                        attribute = relevantTag;
+                                        content = item;
+                                        break;
+                                    }
+                                }
                             }
                             else
                             {
                                 //Grab content tag. Clearly this is unlikely to work for everything.
                                 content = doc.DocumentNode.Descendants()
-                                    .Where(x => x.Id.Contains("main") || x.Id.Contains("article") || x.Id.Contains("content") || x.Id.Contains("container")).FirstOrDefault();
-                                //.Where(x => x.Id.Contains("article") || x.Id.Contains("content") || x.Id.Contains("container")).FirstOrDefault();
-                                //.Where(x => x.Id.Contains("container")).FirstOrDefault();
-                                //.Where(x => x.Attributes.Select(y => y.Name == "href").FirstOrDefault()).FirstOrDefault();
-                                //.Where(x => x.Name == "link").FirstOrDefault();
+                                    .Where(x => x.Id.Contains("main") || x.Id.Contains("article")
+                                        || x.Id.Contains("content") || x.Id.Contains("container")).FirstOrDefault();
+
                             }
 
-
-                            foreach (var item in doc.DocumentNode.Descendants().Where(x => x.Name == "section"))
-                            {
-                                attribute = item.Attributes.Where(x => x.Name == "class" && x.Value == "body").FirstOrDefault();
-
-                                if (attribute != null)
-                                {
-                                    content = item;
-                                    break;
-                                }
-                            }
 
                             if (content != null)
                             {
@@ -169,12 +163,13 @@ namespace HTMLJoiner
                                 PurifyAndSave(save.FileName, doc.DocumentNode, doc.Encoding);
                             }
 
+                            //Starting Chrome to check how well the page is being displayed
                             Process.Start(@"C:\Program Files (x86)\Google\Chrome\Application\chrome.exe",
                             string.Format("\"{0}\"", save.FileName));
 
                             if (MessageBoxResult.Yes == MessageBox.Show("Is it ok?", "OK", MessageBoxButton.YesNo))
                             {
-                                if (string.IsNullOrEmpty(content.Id))
+                                if (!string.IsNullOrEmpty(content.Id))
                                 {
                                     AddDomainToFile(content.Id, domain);
                                 }
@@ -183,6 +178,7 @@ namespace HTMLJoiner
                                     AddDomainToFile(domain, content.Name, attribute.Name, attribute.Value);
                                 }
                             }
+                            //If unhappy, use F12 to select the correct part.
                             else
                             {
                                 Process.Start(@"C:\Program Files (x86)\Google\Chrome\Application\chrome.exe",
@@ -235,7 +231,7 @@ namespace HTMLJoiner
 
             domains.Save(ConfigurationManager.AppSettings["path"]);
         }
-
+        //TODO: This needs fixing adding stuff as <name domain=">
         public static void AddDomainToFile(string domain, string tag, string type, string content)
         {
             XElement site = new XElement("name",
