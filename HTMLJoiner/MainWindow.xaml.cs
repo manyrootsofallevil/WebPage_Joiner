@@ -90,11 +90,7 @@ namespace HTMLJoiner
 
             if (Items.SelectedItems.Count > 0)
             {
-                SaveFileDialog save = new SaveFileDialog();
-                save.AddExtension = true;
-                save.CheckPathExists = true;
-                save.Filter = "HTML Files|*.htm;*.html";
-                save.FileName = System.IO.Path.GetFileName(Items.SelectedItems[0].ToString());
+                SaveFileDialog save = InstatiateSaveDialog();
 
                 if ((bool)save.ShowDialog())
                 {
@@ -157,28 +153,38 @@ namespace HTMLJoiner
                                 //Remove all the nasties and Save to File
                                 PurifyAndSave(save.FileName, content, doc.Encoding);
                             }
+                            //Fail safe. Not sure I like it
                             else
                             {
                                 //Remove all the nasties and Save to File
                                 PurifyAndSave(save.FileName, doc.DocumentNode, doc.Encoding);
                             }
 
+                            //TODO: allow this to be changed to another browser
                             //Starting Chrome to check how well the page is being displayed
-                            Process.Start(@"C:\Program Files (x86)\Google\Chrome\Application\chrome.exe",
-                            string.Format("\"{0}\"", save.FileName));
+                            //     Process.Start(@"C:\Program Files (x86)\Google\Chrome\Application\chrome.exe",
+                            //   string.Format("\"{0}\"", save.FileName));
 
-                            if (MessageBoxResult.Yes == MessageBox.Show("Is it ok?", "OK", MessageBoxButton.YesNo))
+                            //if (MessageBoxResult.Yes == MessageBox.Show("Is it ok?", "OK", MessageBoxButton.YesNo))
+                            if (true)
                             {
                                 if (!string.IsNullOrEmpty(content.Id))
                                 {
-                                    AddDomainToFile(content.Id, domain);
+
+                                    if (domains.Root.Descendants()
+                                        .Where(x => x.Attribute("name").Value == domain).FirstOrDefault() == null)
+                                    {
+                                        AddDomainToFile(content.Id, domain);
+                                    }
                                 }
+                                //Is this actually going to ever be used??
                                 else
                                 {
                                     AddDomainToFile(domain, content.Name, attribute.Name, attribute.Value);
                                 }
                             }
                             //If unhappy, use F12 to select the correct part.
+                            //TODO: allow this to be changed to another browser
                             else
                             {
                                 Process.Start(@"C:\Program Files (x86)\Google\Chrome\Application\chrome.exe",
@@ -204,6 +210,8 @@ namespace HTMLJoiner
             }
         }
 
+
+
         private void Clear_Click(object sender, RoutedEventArgs e)
         {
             ItemList.Clear();
@@ -221,21 +229,31 @@ namespace HTMLJoiner
 
         }
 
+        private SaveFileDialog InstatiateSaveDialog()
+        {
+            SaveFileDialog save = new SaveFileDialog();
+            save.AddExtension = true;
+            save.CheckPathExists = true;
+            save.Filter = "HTML Files|*.htm;*.html";
+            save.FileName = System.IO.Path.GetFileName(Items.SelectedItems[0].ToString());
+            return save;
+        }
+
         public static void AddDomainToFile(string Id, string domain)
         {
-            XElement site = new XElement("name",
-                new XAttribute("domain", domain),
+            XElement site = new XElement("domain",
+                new XAttribute("name", domain),
                 new XAttribute("content", Id));
 
             domains.Root.Add(site);
 
             domains.Save(ConfigurationManager.AppSettings["path"]);
         }
-        //TODO: This needs fixing adding stuff as <name domain=">
+
         public static void AddDomainToFile(string domain, string tag, string type, string content)
         {
-            XElement site = new XElement("name",
-                new XAttribute("domain", domain),
+            XElement site = new XElement("domain",
+                new XAttribute("name", domain),
                 new XAttribute("tag", tag),
                 new XAttribute("type", type),
                 new XAttribute("content", content));
