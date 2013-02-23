@@ -47,6 +47,8 @@ namespace HTMLJoiner
         public string Content { get; set; }
     }
 
+    public enum AppType { Browser, EbookConverter };
+
     /// <summary>
     /// Interaction logic for MainWindow.xaml
     /// </summary>
@@ -98,105 +100,23 @@ namespace HTMLJoiner
                     {
                         HtmlDocument doc = new HtmlDocument();
 
-                        foreach (var file in Items.SelectedItems)
+                        foreach (string file in Items.SelectedItems)
                         {
 
-                            //Allthough this is inefficient, it ensures that it will process recently added domains correctly
-                            //TODO: Look for a better way
-                            domains = LoadDomains();
-
-                            HtmlNode content = null;
-                            HtmlAttribute attribute = null;
-
-                            doc.Load(file.ToString());
-
-                            string domain = GetDomain(doc);
-                            TagData tag = GetContentTag(domains, domain);
-
-                            //If the tag is not empty then we know what we are searching for so we use it
-                            if (!string.IsNullOrEmpty(tag.Content) && string.IsNullOrEmpty(tag.Tag))
-                            {
-                                content = doc.DocumentNode.Descendants()
-                                   .Where(x => x.Id == tag.Content).FirstOrDefault();
-                            }
-                            //Clearly this is sub optimal, but there you go for the time being.
-                            //TODO:Improve.
-                            else if (!string.IsNullOrEmpty(tag.Content) && !string.IsNullOrEmpty(tag.Tag))
-                            {
-                                var tags = doc.DocumentNode.Descendants()
-                                    .Where(x => x.Name == tag.Tag);
-
-                                foreach (var item in tags)
-                                {
-                                    var relevantTag = item.Attributes.Where(x => x.Name == tag.Type && x.Value == tag.Content).FirstOrDefault();
-
-                                    if (relevantTag != null)
-                                    {
-                                        attribute = relevantTag;
-                                        content = item;
-                                        break;
-                                    }
-                                }
-                            }
-                            else
-                            {
-                                //Grab content tag. Clearly this is unlikely to work for everything.
-                                content = doc.DocumentNode.Descendants()
-                                    .Where(x => x.Id.Contains("main") || x.Id.Contains("article")
-                                        || x.Id.Contains("content") || x.Id.Contains("container")).FirstOrDefault();
-
-                            }
-
-
-                            if (content != null)
-                            {
-                                //Remove all the nasties and Save to File
-                                PurifyAndSave(save.FileName, content, doc.Encoding);
-                            }
-                            //Fail safe. Not sure I like it
-                            else
-                            {
-                                //Remove all the nasties and Save to File
-                                PurifyAndSave(save.FileName, doc.DocumentNode, doc.Encoding);
-                            }
-
-                            //TODO: allow this to be changed to another browser
-                            //Starting Chrome to check how well the page is being displayed
-                            //     Process.Start(@"C:\Program Files (x86)\Google\Chrome\Application\chrome.exe",
-                            //   string.Format("\"{0}\"", save.FileName));
-
-                            //if (MessageBoxResult.Yes == MessageBox.Show("Is it ok?", "OK", MessageBoxButton.YesNo))
-                            if (true)
-                            {
-                                if (!string.IsNullOrEmpty(content.Id))
-                                {
-
-                                    if (domains.Root.Descendants()
-                                        .Where(x => x.Attribute("name").Value == domain).FirstOrDefault() == null)
-                                    {
-                                        AddDomainToFile(content.Id, domain);
-                                    }
-                                }
-                                //Is this actually going to ever be used??
-                                else
-                                {
-                                    AddDomainToFile(domain, content.Name, attribute.Name, attribute.Value);
-                                }
-                            }
-                            //If unhappy, use F12 to select the correct part.
-                            //TODO: allow this to be changed to another browser
-                            else
-                            {
-                                Process.Start(@"C:\Program Files (x86)\Google\Chrome\Application\chrome.exe",
-                     string.Format("\"{0}\"", file));
-
-                                ImproveMe cc = new ImproveMe(domain);
-                                cc.ShowDialog();
-
-                            }
+                            SaveHTMLToFile(save, doc, file);
 
                         }
 
+                        if (MessageBoxResult.Yes == MessageBox.Show("Convert to Mobi?", "OK", MessageBoxButton.YesNo))
+                        {
+
+                            string saveFile = string.Format(@"{0}\{1}", System.IO.Path.GetDirectoryName(save.FileName),
+                                System.IO.Path.GetFileNameWithoutExtension(save.FileName));
+
+
+                            RunExternalApplication(AppType.EbookConverter,
+                                string.Format("{0} {1}.mobi", save.FileName, saveFile));
+                        }
                     }
                     catch (Exception ex)
                     {
@@ -209,8 +129,6 @@ namespace HTMLJoiner
                 MessageBox.Show("Select at least one item");
             }
         }
-
-
 
         private void Clear_Click(object sender, RoutedEventArgs e)
         {
@@ -227,6 +145,142 @@ namespace HTMLJoiner
                 }
             }
 
+        }
+
+
+
+        private void SaveHTMLToFile(SaveFileDialog save, HtmlDocument doc, string file)
+        {
+            //Allthough this is inefficient, it ensures that it will process recently added domains correctly
+            //TODO: Look for a better way
+            domains = LoadDomains();
+
+            HtmlNode content = null;
+            HtmlAttribute attribute = null;
+
+            doc.Load(file.ToString());
+
+            string domain = GetDomain(doc);
+            TagData tag = GetContentTag(domains, domain);
+
+            //If the tag is not empty then we know what we are searching for so we use it
+            if (!string.IsNullOrEmpty(tag.Content) && string.IsNullOrEmpty(tag.Tag))
+            {
+                content = doc.DocumentNode.Descendants()
+                   .Where(x => x.Id == tag.Content).FirstOrDefault();
+            }
+            //Clearly this is sub optimal, but there you go for the time being.
+            //TODO:Improve.
+            else if (!string.IsNullOrEmpty(tag.Content) && !string.IsNullOrEmpty(tag.Tag))
+            {
+                var tags = doc.DocumentNode.Descendants()
+                    .Where(x => x.Name == tag.Tag);
+
+                foreach (var item in tags)
+                {
+                    var relevantTag = item.Attributes.Where(x => x.Name == tag.Type && x.Value == tag.Content).FirstOrDefault();
+
+                    if (relevantTag != null)
+                    {
+                        attribute = relevantTag;
+                        content = item;
+                        break;
+                    }
+                }
+            }
+            else
+            {
+                //Grab content tag. Clearly this is unlikely to work for everything.
+                content = doc.DocumentNode.Descendants()
+                    .Where(x => x.Id.Contains("main") || x.Id.Contains("article")
+                        || x.Id.Contains("content") || x.Id.Contains("container")).FirstOrDefault();
+
+            }
+
+
+            if (content != null)
+            {
+                //Remove all the nasties and Save to File
+                PurifyAndSave(save.FileName, content, doc.Encoding);
+            }
+            //Fail safe. Not sure I like it
+            else
+            {
+                //Remove all the nasties and Save to File
+                PurifyAndSave(save.FileName, doc.DocumentNode, doc.Encoding);
+            }
+
+
+            //Starting Browser to check how well the page is being displayed
+            RunExternalApplication(AppType.Browser, string.Format("\"{0}\"", save.FileName));
+
+
+            if (MessageBoxResult.Yes == MessageBox.Show("Are you Satisfied with the Conversion", "OK", MessageBoxButton.YesNo))
+            {
+                if (!string.IsNullOrEmpty(content.Id) && domains.Root.Descendants()
+                        .Where(x => x.Attribute("name").Value == domain).FirstOrDefault() == null)
+                {
+
+                    AddDomainToFile(content.Id, domain);
+
+                }
+                //Is this actually going to ever be used??
+                else if (domains.Root.Descendants()
+                        .Where(x => x.Attribute("name").Value == domain).FirstOrDefault() == null)
+                {
+                    AddDomainToFile(domain, content.Name, attribute.Name, attribute.Value);
+                }
+            }
+            //If unhappy, use F12 to select the correct part.
+            //TODO: allow this to be changed to another browser
+            else
+            {
+                //Delete File as we did not like the output
+                File.Delete(save.FileName);
+                //Run Browser with original file
+                RunExternalApplication(AppType.Browser, string.Format("\"{0}\"", file));
+                //Run the Improve Me Dialog.
+                ImproveMe cc = new ImproveMe(domain);
+
+                if ((bool)cc.ShowDialog())
+                {
+                    //Try Again;
+                    SaveHTMLToFile(save, doc, file);
+                }
+            }
+        }
+
+        private void RunExternalApplication(AppType app, string arguments)
+        {
+            switch (app)
+            {
+                case AppType.Browser:
+                    Process.Start(ConfigurationManager.AppSettings["Browser"], arguments);
+                    break;
+                case AppType.EbookConverter:
+                    Process.Start(ConfigurationManager.AppSettings["EbookConverter"], arguments);
+                    break;
+
+
+            }
+            //TODO: Have a look at this to get the ouput from ebook converter process
+            //            var proc = new Process {
+            //    StartInfo = new ProcessStartInfo {
+            //        FileName = "program.exe",
+            //        Arguments = "command line arguments to your executable",
+            //        UseShellExecute = false,
+            //        RedirectStandardOutput = true,
+            //        CreateNoWindow = true
+            //    }
+            //};
+            //then start the process and read from it:
+
+            //proc.Start();
+            //while (!proc.StandardOutput.EndOfStream)
+            //{
+            //    string line = proc.StandardOutput.ReadLine();
+            //    // do something with line
+            //}
         }
 
         private SaveFileDialog InstatiateSaveDialog()
@@ -319,8 +373,14 @@ namespace HTMLJoiner
         private static void PurifyAndSave(string fileName, HtmlNode content, Encoding encoding)
         {
             content.Descendants()
-                .Where(x => x.Name == "script" || x.Name == "iframe" || x.Name == "noscript" || x.Name == "form" || x.Id.Contains("comment")).ToList()
+                .Where(x => x.Name == "script" || x.Name == "iframe" || x.Name == "noscript"
+                    || x.Name == "form" || x.Name == "#comment" || x.Id.Contains("comment")).ToList()
                 .ForEach(x => x.Remove());
+
+            var tolo = content.Descendants();
+            var tol =
+            content.Descendants()
+                .Where(x => x.Name == "script" || x.Name == "iframe" || x.Name == "noscript" || x.Name == "form" || x.Id.Contains("comment")).ToList();
 
             using (StreamWriter sw = new StreamWriter(fileName, true, encoding))
             {
