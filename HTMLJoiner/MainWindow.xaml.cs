@@ -212,7 +212,10 @@ namespace HTMLJoiner
 
 
             //Starting Browser to check how well the page is being displayed
-            RunExternalApplication(AppType.Browser, string.Format("\"{0}\"", save.FileName));
+            if ((bool)Learn.IsChecked)
+            {
+                RunExternalApplication(AppType.Browser, string.Format("\"{0}\"", save.FileName));
+            }
 
 
             if ((bool)!Learn.IsChecked || MessageBoxResult.Yes == MessageBox.Show("Are you Satisfied with the Conversion", "OK", MessageBoxButton.YesNo))
