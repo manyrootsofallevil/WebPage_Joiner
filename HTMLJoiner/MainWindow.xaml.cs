@@ -107,7 +107,7 @@ namespace HTMLJoiner
 
                         }
 
-                        if (MessageBoxResult.Yes == MessageBox.Show("Convert to Mobi?", "OK", MessageBoxButton.YesNo))
+                        if ((bool)Convert.IsChecked)
                         {
 
                             string saveFile = string.Format(@"{0}\{1}", System.IO.Path.GetDirectoryName(save.FileName),
@@ -215,7 +215,7 @@ namespace HTMLJoiner
             RunExternalApplication(AppType.Browser, string.Format("\"{0}\"", save.FileName));
 
 
-            if (MessageBoxResult.Yes == MessageBox.Show("Are you Satisfied with the Conversion", "OK", MessageBoxButton.YesNo))
+            if ((bool)!Learn.IsChecked || MessageBoxResult.Yes == MessageBox.Show("Are you Satisfied with the Conversion", "OK", MessageBoxButton.YesNo))
             {
                 if (!string.IsNullOrEmpty(content.Id) && domains.Root.Descendants()
                         .Where(x => x.Attribute("name").Value == domain).FirstOrDefault() == null)
