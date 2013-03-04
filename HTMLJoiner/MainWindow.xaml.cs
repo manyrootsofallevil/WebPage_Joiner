@@ -220,6 +220,11 @@ namespace HTMLJoiner
 
             if ((bool)!Learn.IsChecked || MessageBoxResult.Yes == MessageBox.Show("Are you Satisfied with the Conversion", "OK", MessageBoxButton.YesNo))
             {
+                if ((bool)Delete.IsChecked)
+                {
+                    File.Delete(file);
+                }
+
                 if (!string.IsNullOrEmpty(content.Id) && domains.Root.Descendants()
                         .Where(x => x.Attribute("name").Value == domain).FirstOrDefault() == null)
                 {
@@ -387,7 +392,8 @@ namespace HTMLJoiner
 
             using (StreamWriter sw = new StreamWriter(fileName, true, encoding))
             {
-                sw.Write(content.InnerHtml.Replace("â€™", "'").Replace("â€œ", "\"").Replace("â€", "\""));
+                //TODO: What the hell is this?????
+                sw.Write(content.InnerHtml.Replace("â€™", "'").Replace("â€œ", "\"").Replace("â€”", "—").Replace("â€", "\""));
             }
         }
 
