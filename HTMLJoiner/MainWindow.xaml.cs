@@ -92,7 +92,7 @@ namespace HTMLJoiner
 
             if (Items.SelectedItems.Count > 0)
             {
-                SaveFileDialog save = InstatiateSaveDialog();
+                SaveFileDialog save = InstatiateSaveDialog(Items.SelectedItems.Count>1 ? true : false);
 
                 if ((bool)save.ShowDialog())
                 {
@@ -112,7 +112,7 @@ namespace HTMLJoiner
 
                             string saveFile = string.Format(@"{0}\{1}", System.IO.Path.GetDirectoryName(save.FileName),
                                 System.IO.Path.GetFileNameWithoutExtension(save.FileName));
-
+                            //TODO: Add Author, etc...
 
                             RunExternalApplication(AppType.EbookConverter,
                                 string.Format("{0} {1}.mobi", save.FileName, saveFile));
@@ -120,7 +120,7 @@ namespace HTMLJoiner
                     }
                     catch (Exception ex)
                     {
-                        MessageBox.Show(string.Format("Error: {0} - {1}.", ex.Message, ex.GetType()));
+                        MessageBox.Show(string.Format("Error: {0} - {1}.", ex, ex.GetType()));
                     }
                 }
             }
@@ -158,7 +158,7 @@ namespace HTMLJoiner
             HtmlNode content = null;
             HtmlAttribute attribute = null;
 
-            doc.Load(file.ToString());
+            doc.Load(file.ToString(),System.Text.Encoding.UTF8, false);
 
             string domain = GetDomain(doc);
             TagData tag = GetContentTag(domains, domain);
@@ -291,38 +291,59 @@ namespace HTMLJoiner
             //}
         }
 
-        private SaveFileDialog InstatiateSaveDialog()
+        private SaveFileDialog InstatiateSaveDialog(bool multiple)
         {
             SaveFileDialog save = new SaveFileDialog();
             save.AddExtension = true;
             save.CheckPathExists = true;
             save.Filter = "HTML Files|*.htm;*.html";
-            save.FileName = System.IO.Path.GetFileName(Items.SelectedItems[0].ToString());
+            if (multiple)
+            {
+                save.FileName = string.Format("{0}.html", DateTime.Now.ToString("yyyyMMdd"));
+            }
+            else
+            {
+                save.FileName = "article.html";
+            }
             return save;
         }
 
         public static void AddDomainToFile(string Id, string domain)
         {
-            XElement site = new XElement("domain",
-                new XAttribute("name", domain),
-                new XAttribute("content", Id));
+            try
+            {
+                XElement site = new XElement("domain",
+             new XAttribute("name", domain),
+             new XAttribute("content", Id));
 
-            domains.Root.Add(site);
+                domains.Root.Add(site);
 
-            domains.Save(ConfigurationManager.AppSettings["path"]);
+                domains.Save(ConfigurationManager.AppSettings["path"]);
+            }
+            catch (Exception ex)
+            {
+                MessageBox.Show(ex.ToString());
+            }
         }
 
         public static void AddDomainToFile(string domain, string tag, string type, string content)
         {
-            XElement site = new XElement("domain",
-                new XAttribute("name", domain),
-                new XAttribute("tag", tag),
-                new XAttribute("type", type),
-                new XAttribute("content", content));
+            try
+            {
+                XElement site = new XElement("domain",
+            new XAttribute("name", domain),
+            new XAttribute("tag", tag),
+            new XAttribute("type", type),
+            new XAttribute("content", content));
 
-            domains.Root.Add(site);
+                domains.Root.Add(site);
 
-            domains.Save(ConfigurationManager.AppSettings["path"]);
+                domains.Save(ConfigurationManager.AppSettings["path"]);
+            }
+            catch (Exception ex)
+            {
+                MessageBox.Show(ex.ToString());
+            }
         }
 
         /// <summary>
@@ -380,20 +401,29 @@ namespace HTMLJoiner
 
         private static void PurifyAndSave(string fileName, HtmlNode content, Encoding encoding)
         {
-            content.Descendants()
-                .Where(x => x.Name == "script" || x.Name == "iframe" || x.Name == "noscript"
-                    || x.Name == "form" || x.Name == "#comment" || x.Id.Contains("comment")).ToList()
-                .ForEach(x => x.Remove());
-
-            var tolo = content.Descendants();
-            var tol =
-            content.Descendants()
-                .Where(x => x.Name == "script" || x.Name == "iframe" || x.Name == "noscript" || x.Name == "form" || x.Id.Contains("comment")).ToList();
-
-            using (StreamWriter sw = new StreamWriter(fileName, true, encoding))
+            try
             {
-                //TODO: What the hell is this?????
-                sw.Write(content.InnerHtml.Replace("â€™", "'").Replace("â€œ", "\"").Replace("â€”", "—").Replace("â€", "\""));
+                content.Descendants()
+            .Where(x => x.Name == "script" || x.Name == "iframe" || x.Name == "noscript"
+                || x.Name == "form" || x.Name == "#comment" || x.Id.Contains("comment")).ToList()
+            .ForEach(x => x.Remove());
+
+                var tolo = content.Descendants();
+                var tol =
+                content.Descendants()
+                    .Where(x => x.Name == "script" || x.Name == "iframe" || x.Name == "noscript" || x.Name == "form" || x.Id.Contains("comment")).ToList();
+
+                using (StreamWriter sw = new StreamWriter(fileName, true, encoding))
+                {
+                    //TODO: What the hell is this?????
+                    //answer. Encoding issues.
+                    //sw.Write(content.InnerHtml.Replace("â€™", "'").Replace("â€œ", "\"").Replace("â€”", "—").Replace("â€", "\""));
+                    sw.Write(content.InnerHtml);
+                }
+            }
+            catch (Exception ex)
+            {
+                MessageBox.Show(ex.ToString());
             }
         }
 
