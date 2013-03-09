@@ -57,6 +57,8 @@
       <Generator>MSBuild:Compile</Generator>
       <SubType>Designer</SubType>
     </ApplicationDefinition>
+    <Compile Include="HTMLPage.cs" />
+    <Compile Include="TagData.cs" />
     <Compile Include="Validator.cs" />
     <Page Include="ImproveMe.xaml">
       <SubType>Designer</SubType>
@@ -103,7 +105,9 @@
     <AppDesigner Include="Properties\" />
   </ItemGroup>
   <ItemGroup>
-    <None Include="App.config" />
+    <None Include="App.config">
+      <SubType>Designer</SubType>
+    </None>
   </ItemGroup>
   <ItemGroup>
     <None Include="domains.xml">

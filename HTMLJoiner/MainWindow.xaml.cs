@@ -26,27 +26,6 @@ using System.Xml.Linq;
 namespace HTMLJoiner
 {
 
-    public class TagData
-    {
-        string name, tag, type, content;
-
-        public TagData() { }
-
-        public TagData(string name, string tag, string type, string content)
-        {
-            this.name = name;
-            this.tag = tag;
-            this.type = type;
-            this.content = content;
-        }
-
-
-        public string Name { get; set; }
-        public string Tag { get; set; }
-        public string Type { get; set; }
-        public string Content { get; set; }
-    }
-
     public enum AppType { Browser, EbookConverter };
 
     /// <summary>
@@ -55,15 +34,28 @@ namespace HTMLJoiner
     public partial class MainWindow : Window
     {
         static XDocument domains;
+        private CollectionViewSource fileList = new CollectionViewSource();
+
+
 
         public MainWindow()
         {
-            this.ItemList = new ObservableCollection<string>();
+            this.ItemList = new ObservableCollection<HTMLPage>();
+            fileList.Source = ItemList;
+            //this.fileList.SortDescriptions.Add(new SortDescription("HTMLPage.FileName",
+            //   ListSortDirection.Ascending));
+
             InitializeComponent();
             DataContext = this;
         }
 
-        public ObservableCollection<string> ItemList
+        public CollectionViewSource FileList
+        {
+            get { return fileList; }
+
+        }
+
+        public ObservableCollection<HTMLPage> ItemList
         {
             get;
             private set;
@@ -82,7 +74,7 @@ namespace HTMLJoiner
             {
                 foreach (string st in files.FileNames)
                 {
-                    this.ItemList.Add(st);
+                    this.ItemList.Add(new HTMLPage(st));
                 }
             }
         }
@@ -90,9 +82,9 @@ namespace HTMLJoiner
         private void SaveFile_Click(object sender, RoutedEventArgs e)
         {
 
-            if (Items.SelectedItems.Count > 0)
-            {
-                SaveFileDialog save = InstatiateSaveDialog(Items.SelectedItems.Count>1 ? true : false);
+            //if (Items.SelectedItems.Count > 0)
+            //{
+                SaveFileDialog save = InstatiateSaveDialog(ItemList.Count() > 1 ? true : false);
 
                 if ((bool)save.ShowDialog())
                 {
@@ -100,11 +92,10 @@ namespace HTMLJoiner
                     {
                         HtmlDocument doc = new HtmlDocument();
 
-                        foreach (string file in Items.SelectedItems)
+                        //foreach (string file in Items.SelectedItems)
+                        foreach(HTMLPage page in FileList.View)
                         {
-
-                            SaveHTMLToFile(save, doc, file);
-
+                            SaveHTMLToFile(save, doc, page.GetPage());
                         }
 
                         if ((bool)Convert.IsChecked)
@@ -113,9 +104,12 @@ namespace HTMLJoiner
                             string saveFile = string.Format(@"{0}\{1}", System.IO.Path.GetDirectoryName(save.FileName),
                                 System.IO.Path.GetFileNameWithoutExtension(save.FileName));
                             //TODO: Add Author, etc...
+                            //TODO: http://manual.calibre-ebook.com/conversion.html
+
+                            //ADD <H1> tag with article title before each new page.
 
                             RunExternalApplication(AppType.EbookConverter,
-                                string.Format("{0} {1}.mobi", save.FileName, saveFile));
+                                string.Format("{0} {1}.mobi --authors {2}", save.FileName, saveFile,"YestMen"));
                         }
                     }
                     catch (Exception ex)
@@ -123,11 +117,11 @@ namespace HTMLJoiner
                         MessageBox.Show(string.Format("Error: {0} - {1}.", ex, ex.GetType()));
                     }
                 }
-            }
-            else
-            {
-                MessageBox.Show("Select at least one item");
-            }
+            //}
+            //else
+            //{
+            //    MessageBox.Show("Select at least one item");
+            //}
         }
 
         private void Clear_Click(object sender, RoutedEventArgs e)
@@ -141,7 +135,7 @@ namespace HTMLJoiner
             {
                 for (int i = 0; i < Items.SelectedItems.Count; i++)
                 {
-                    ItemList.Remove(Items.SelectedItems[i].ToString());
+                    //ItemList.Remove();
                 }
             }
 
@@ -158,7 +152,7 @@ namespace HTMLJoiner
             HtmlNode content = null;
             HtmlAttribute attribute = null;
 
-            doc.Load(file.ToString(),System.Text.Encoding.UTF8, false);
+            doc.Load(file.ToString(), System.Text.Encoding.UTF8, false);
 
             string domain = GetDomain(doc);
             TagData tag = GetContentTag(domains, domain);
