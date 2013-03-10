@@ -3,6 +3,8 @@ Microsoft Visual Studio Solution File, Format Version 12.00
 # Visual Studio 2012
 Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "HTMLJoiner", "HTMLJoiner\HTMLJoiner.csproj", "{9B0E3B2A-796D-4B8D-8E9E-C31C833EE33F}"
 EndProject
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "HostFeed", "HostFeed\HostFeed.csproj", "{3C451A60-CB7A-4342-9D41-05B342BCBA6B}"
+EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
 		Debug|Any CPU = Debug|Any CPU
@@ -13,6 +15,10 @@ Global
 		{9B0E3B2A-796D-4B8D-8E9E-C31C833EE33F}.Debug|Any CPU.Build.0 = Debug|Any CPU
 		{9B0E3B2A-796D-4B8D-8E9E-C31C833EE33F}.Release|Any CPU.ActiveCfg = Release|Any CPU
 		{9B0E3B2A-796D-4B8D-8E9E-C31C833EE33F}.Release|Any CPU.Build.0 = Release|Any CPU
+		{3C451A60-CB7A-4342-9D41-05B342BCBA6B}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{3C451A60-CB7A-4342-9D41-05B342BCBA6B}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{3C451A60-CB7A-4342-9D41-05B342BCBA6B}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{3C451A60-CB7A-4342-9D41-05B342BCBA6B}.Release|Any CPU.Build.0 = Release|Any CPU
 	EndGlobalSection
 	GlobalSection(SolutionProperties) = preSolution
 		HideSolutionNode = FALSE

@@ -1,4 +1,5 @@
-﻿using HtmlAgilityPack;
+﻿using HostFeed;
+using HtmlAgilityPack;
 using Microsoft.Win32;
 using System;
 using System.Collections.Generic;
@@ -20,11 +21,18 @@ using System.Windows.Media;
 using System.Windows.Media.Imaging;
 using System.Windows.Navigation;
 using System.Windows.Shapes;
-
 using System.Xml.Linq;
 
 namespace HTMLJoiner
 {
+    //So it seems that the simplest way of getting periodicals is to create a RSS feed of all the links and let
+    //Calibre do its work. However, this negates all the work done here, which is a bit of a bastard but there you go
+    //Also there is no control whatsoever over the conversion process, so Calibre has issues then that's that.
+    //I guess an alternative is to offer both options, i.e. periodicals in which case only links will be needed and full
+    //processing, in which case the files will be needed, but this raises the question of why do we need the files, 
+    //just download them and be done with it.
+    //I guess the files could be hosted after they have been stripped of all the stuff but it seems awfully convoluted.
+
 
     public enum AppType { Browser, EbookConverter };
 
@@ -36,6 +44,8 @@ namespace HTMLJoiner
         static XDocument domains;
         private CollectionViewSource fileList = new CollectionViewSource();
 
+        private readonly BackgroundWorker feed = new BackgroundWorker();
+
 
 
         public MainWindow()
@@ -44,9 +54,11 @@ namespace HTMLJoiner
             fileList.Source = ItemList;
             //this.fileList.SortDescriptions.Add(new SortDescription("HTMLPage.FileName",
             //   ListSortDirection.Ascending));
-
+            
             InitializeComponent();
             DataContext = this;
+
+            feed.DoWork+=(o,e) => {Host.Start();};
         }
 
         public CollectionViewSource FileList
@@ -446,6 +458,11 @@ namespace HTMLJoiner
             return domains.Root.Descendants().Where(x => x.Name == domain).Count() == 1;
         }
 
+        private void Button_Click(object sender, RoutedEventArgs e)
+        {
+            feed.RunWorkerAsync();
+        }
 
+        //TODO: Delete directoires as well as files if appropriate
     }
 }
