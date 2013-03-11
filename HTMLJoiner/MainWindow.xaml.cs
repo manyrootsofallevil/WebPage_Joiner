@@ -34,6 +34,12 @@ namespace HTMLJoiner
     //I guess the files could be hosted after they have been stripped of all the stuff but it seems awfully convoluted.
 
 
+    //1. Convert Saved Web Pages to Mobi.
+    //   Simplest way is to create an RSS feed of the saved pages addresses and let Calibre sort it out.
+    //2. Create Chrome Extension that saves urls in file [wouldn't be simpler to save them as bookmarks?] 
+    //so that thye can be feed to 1.
+    // 3. Convert individual files to mobi, is this needed?
+
     public enum AppType { Browser, EbookConverter };
 
     /// <summary>
@@ -54,11 +60,13 @@ namespace HTMLJoiner
             fileList.Source = ItemList;
             //this.fileList.SortDescriptions.Add(new SortDescription("HTMLPage.FileName",
             //   ListSortDirection.Ascending));
-            
+
             InitializeComponent();
             DataContext = this;
 
-            feed.DoWork+=(o,e) => {Host.Start();};
+            feed.DoWork += (o, e) => { Host.Start(); };
+            feed.RunWorkerCompleted += (o, e) => { //run ebook converter here. Give full path to recipe
+            };
         }
 
         public CollectionViewSource FileList
@@ -96,39 +104,53 @@ namespace HTMLJoiner
 
             //if (Items.SelectedItems.Count > 0)
             //{
-                SaveFileDialog save = InstatiateSaveDialog(ItemList.Count() > 1 ? true : false);
+            SaveFileDialog save = InstatiateSaveDialog(ItemList.Count() > 1 ? true : false);
 
-                if ((bool)save.ShowDialog())
+            if ((bool)save.ShowDialog())
+            {
+                try
                 {
-                    try
+                    HtmlDocument doc = new HtmlDocument();
+                    StreamWriter sr = new StreamWriter(@"C:\urls.txt");
+
+                    //foreach (string file in Items.SelectedItems)
+                    foreach (HTMLPage page in FileList.View)
                     {
-                        HtmlDocument doc = new HtmlDocument();
 
-                        //foreach (string file in Items.SelectedItems)
-                        foreach(HTMLPage page in FileList.View)
-                        {
-                            SaveHTMLToFile(save, doc, page.GetPage());
-                        }
+                        HtmlDocument docx = new HtmlDocument();
+                        
+                        docx.Load(page.GetPage(), System.Text.Encoding.UTF8, false);
 
-                        if ((bool)Convert.IsChecked)
-                        {
 
-                            string saveFile = string.Format(@"{0}\{1}", System.IO.Path.GetDirectoryName(save.FileName),
-                                System.IO.Path.GetFileNameWithoutExtension(save.FileName));
-                            //TODO: Add Author, etc...
-                            //TODO: http://manual.calibre-ebook.com/conversion.html
+                        var domain = docx.DocumentNode.ChildNodes
+.Where(x => x.Name.Contains("comment") && x.InnerHtml.Contains("saved from"))
+.FirstOrDefault().InnerHtml;
 
-                            //ADD <H1> tag with article title before each new page.
-
-                            RunExternalApplication(AppType.EbookConverter,
-                                string.Format("{0} {1}.mobi --authors {2}", save.FileName, saveFile,"YestMen"));
-                        }
+                        string url = domain.Split(')')[1].Remove(domain.Split(')')[1].Length - 3).Trim();
+                        sr.WriteLine(url);
+                        //SaveHTMLToFile(save, doc, page.GetPage());
                     }
-                    catch (Exception ex)
+                    sr.Flush();
+                    sr.Close();
+                    if ((bool)Convert.IsChecked)
                     {
-                        MessageBox.Show(string.Format("Error: {0} - {1}.", ex, ex.GetType()));
+
+                        string saveFile = string.Format(@"{0}\{1}", System.IO.Path.GetDirectoryName(save.FileName),
+                            System.IO.Path.GetFileNameWithoutExtension(save.FileName));
+                        //TODO: Add Author, etc...
+                        //TODO: http://manual.calibre-ebook.com/conversion.html
+
+                        //ADD <H1> tag with article title before each new page.
+
+                        RunExternalApplication(AppType.EbookConverter,
+                            string.Format("{0} {1}.mobi --authors {2}", save.FileName, saveFile, "YestMen"));
                     }
                 }
+                catch (Exception ex)
+                {
+                    MessageBox.Show(string.Format("Error: {0} - {1}.", ex, ex.GetType()));
+                }
+            }
             //}
             //else
             //{
@@ -458,10 +480,15 @@ namespace HTMLJoiner
             return domains.Root.Descendants().Where(x => x.Name == domain).Count() == 1;
         }
 
-        private void Button_Click(object sender, RoutedEventArgs e)
+        private void Periodical_Click(object sender, RoutedEventArgs e)
         {
+            Convert.IsChecked = true;
             feed.RunWorkerAsync();
+            RunExternalApplication(AppType.EbookConverter,
+                 string.Format("Custom.recipe {0}.mobi --authors {1}", @"c:\saveFile", "YesMen"));
         }
+
+
 
         //TODO: Delete directoires as well as files if appropriate
     }

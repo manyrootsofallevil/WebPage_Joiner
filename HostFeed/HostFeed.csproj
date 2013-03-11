@@ -44,6 +44,7 @@
   </ItemGroup>
   <ItemGroup>
     <Compile Include="Host.cs" />
+    <Compile Include="HTMLPage.cs" />
     <Compile Include="Properties\AssemblyInfo.cs" />
     <Compile Include="Rss.cs" />
   </ItemGroup>

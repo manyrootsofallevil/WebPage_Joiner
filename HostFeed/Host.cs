@@ -20,18 +20,13 @@ namespace HostFeed
         public static void Start()
         {
 
-
-            using (WebServiceHost ss = new WebServiceHost())
-            {
-
-            }
             try
             {
                 svcHost.Open();
             }
             catch (CommunicationException ce)
             {
-                Console.WriteLine("An exception occurred: {0}", ce.Message);
+               // MessageBox.Show("An exception occurred: {0}", ce.Message);
                 svcHost.Abort();
             }
         }

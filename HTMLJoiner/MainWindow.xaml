@@ -11,9 +11,9 @@
         </ListBox>
         <Button Name="Clear" Content="Clear List" HorizontalAlignment="Left" Margin="32,280,0,0" VerticalAlignment="Top" Width="75" Click="Clear_Click"/>
         <Button Name="ClearSelected" Content="Clear Selected" HorizontalAlignment="Left" Margin="129,280,0,0" VerticalAlignment="Top" Width="93" Click="ClearSelected_Click"/>
-        <CheckBox Name="Learn" Content="Learning Mode" HorizontalAlignment="Left" Margin="337,325,0,0" VerticalAlignment="Top" Width="103"/>
-        <CheckBox Name="Convert" Content="Convert to Mobi" HorizontalAlignment="Left" Margin="337,280,0,0" VerticalAlignment="Top" Width="119"/>
-        <CheckBox Name="Delete" Content="Delete Processed Files" HorizontalAlignment="Left" Margin="337,303,0,0" VerticalAlignment="Top"/>
-        <Button Content="Button" HorizontalAlignment="Left" Margin="516,280,-4,0" VerticalAlignment="Top" Width="75" Click="Button_Click"/>
+        <CheckBox Name="Learn" Content="Learning Mode" HorizontalAlignment="Left" Margin="417,325,0,0" VerticalAlignment="Top" Width="103"/>
+        <CheckBox Name="Convert" Content="Convert to Mobi" HorizontalAlignment="Left" Margin="417,280,0,0" VerticalAlignment="Top" Width="119"/>
+        <CheckBox Name="Delete" Content="Delete Processed Files" HorizontalAlignment="Left" Margin="417,303,0,0" VerticalAlignment="Top"/>
+        <Button Name="Periodical" Content="Periodical" HorizontalAlignment="Left" Margin="236,319,0,0" VerticalAlignment="Top" Width="75" Click="Periodical_Click"/>
     </Grid>
 </Window>
