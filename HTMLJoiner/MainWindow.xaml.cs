@@ -36,11 +36,12 @@ namespace HTMLJoiner
 
     //1. Convert Saved Web Pages to Mobi.
     //   Simplest way is to create an RSS feed of the saved pages addresses and let Calibre sort it out.
-    //2. Create Chrome Extension that saves urls in file [wouldn't be simpler to save them as bookmarks?] 
+    //2. Create Chrome Extension that saves urls in file [wouldn't be simpler to save them as bookmarks? use sqllite
+    //bookmarks here C:\Users\[YourUserName]\AppData\Local\Google\Chrome\User Data\Default\] 
     //so that thye can be feed to 1.
     // 3. Convert individual files to mobi, is this needed?
 
-    public enum AppType { Browser, EbookConverter };
+
 
     /// <summary>
     /// Interaction logic for MainWindow.xaml
@@ -48,11 +49,10 @@ namespace HTMLJoiner
     public partial class MainWindow : Window
     {
         static XDocument domains;
+
         private CollectionViewSource fileList = new CollectionViewSource();
 
         private readonly BackgroundWorker feed = new BackgroundWorker();
-
-
 
         public MainWindow()
         {
@@ -65,7 +65,8 @@ namespace HTMLJoiner
             DataContext = this;
 
             feed.DoWork += (o, e) => { Host.Start(); };
-            feed.RunWorkerCompleted += (o, e) => { //run ebook converter here. Give full path to recipe
+            feed.RunWorkerCompleted += (o, e) =>
+            { //run ebook converter here. Give full path to recipe
             };
         }
 
@@ -83,20 +84,7 @@ namespace HTMLJoiner
 
         private void LoadFiles_Click(object sender, RoutedEventArgs e)
         {
-            OpenFileDialog files = new OpenFileDialog();
-            files.AddExtension = true;
-            files.CheckFileExists = true;
-            files.Multiselect = true;
-            files.Filter = "HTML Files|*.htm;*.html";
-            files.FilterIndex = 1;
-
-            if ((bool)files.ShowDialog())
-            {
-                foreach (string st in files.FileNames)
-                {
-                    this.ItemList.Add(new HTMLPage(st));
-                }
-            }
+            Common.LoadFiles(this.ItemList);
         }
 
         private void SaveFile_Click(object sender, RoutedEventArgs e)
@@ -104,34 +92,25 @@ namespace HTMLJoiner
 
             //if (Items.SelectedItems.Count > 0)
             //{
-            SaveFileDialog save = InstatiateSaveDialog(ItemList.Count() > 1 ? true : false);
+            SaveFileDialog save = Common.InstatiateSaveDialog(ItemList.Count() > 1 ? true : false);
 
             if ((bool)save.ShowDialog())
             {
+
+                CreateRSSData mydata = new CreateRSSData();
+                mydata.CreateRSSItems(ItemList);
+
+                     
                 try
                 {
                     HtmlDocument doc = new HtmlDocument();
-                    StreamWriter sr = new StreamWriter(@"C:\urls.txt");
 
                     //foreach (string file in Items.SelectedItems)
                     foreach (HTMLPage page in FileList.View)
                     {
-
-                        HtmlDocument docx = new HtmlDocument();
-                        
-                        docx.Load(page.GetPage(), System.Text.Encoding.UTF8, false);
-
-
-                        var domain = docx.DocumentNode.ChildNodes
-.Where(x => x.Name.Contains("comment") && x.InnerHtml.Contains("saved from"))
-.FirstOrDefault().InnerHtml;
-
-                        string url = domain.Split(')')[1].Remove(domain.Split(')')[1].Length - 3).Trim();
-                        sr.WriteLine(url);
                         //SaveHTMLToFile(save, doc, page.GetPage());
                     }
-                    sr.Flush();
-                    sr.Close();
+
                     if ((bool)Convert.IsChecked)
                     {
 
@@ -142,7 +121,7 @@ namespace HTMLJoiner
 
                         //ADD <H1> tag with article title before each new page.
 
-                        RunExternalApplication(AppType.EbookConverter,
+                        Common.RunExternalApplication(AppType.EbookConverter,
                             string.Format("{0} {1}.mobi --authors {2}", save.FileName, saveFile, "YestMen"));
                     }
                 }
@@ -242,7 +221,7 @@ namespace HTMLJoiner
             //Starting Browser to check how well the page is being displayed
             if ((bool)Learn.IsChecked)
             {
-                RunExternalApplication(AppType.Browser, string.Format("\"{0}\"", save.FileName));
+                Common.RunExternalApplication(AppType.Browser, string.Format("\"{0}\"", save.FileName));
             }
 
 
@@ -274,7 +253,7 @@ namespace HTMLJoiner
                 //Delete File as we did not like the output
                 File.Delete(save.FileName);
                 //Run Browser with original file
-                RunExternalApplication(AppType.Browser, string.Format("\"{0}\"", file));
+                Common.RunExternalApplication(AppType.Browser, string.Format("\"{0}\"", file));
                 //Run the Improve Me Dialog.
                 ImproveMe cc = new ImproveMe(domain);
 
@@ -284,56 +263,6 @@ namespace HTMLJoiner
                     SaveHTMLToFile(save, doc, file);
                 }
             }
-        }
-
-        private void RunExternalApplication(AppType app, string arguments)
-        {
-            switch (app)
-            {
-                case AppType.Browser:
-                    Process.Start(ConfigurationManager.AppSettings["Browser"], arguments);
-                    break;
-                case AppType.EbookConverter:
-                    Process.Start(ConfigurationManager.AppSettings["EbookConverter"], arguments);
-                    break;
-
-
-            }
-            //TODO: Have a look at this to get the ouput from ebook converter process
-            //            var proc = new Process {
-            //    StartInfo = new ProcessStartInfo {
-            //        FileName = "program.exe",
-            //        Arguments = "command line arguments to your executable",
-            //        UseShellExecute = false,
-            //        RedirectStandardOutput = true,
-            //        CreateNoWindow = true
-            //    }
-            //};
-            //then start the process and read from it:
-
-            //proc.Start();
-            //while (!proc.StandardOutput.EndOfStream)
-            //{
-            //    string line = proc.StandardOutput.ReadLine();
-            //    // do something with line
-            //}
-        }
-
-        private SaveFileDialog InstatiateSaveDialog(bool multiple)
-        {
-            SaveFileDialog save = new SaveFileDialog();
-            save.AddExtension = true;
-            save.CheckPathExists = true;
-            save.Filter = "HTML Files|*.htm;*.html";
-            if (multiple)
-            {
-                save.FileName = string.Format("{0}.html", DateTime.Now.ToString("yyyyMMdd"));
-            }
-            else
-            {
-                save.FileName = "article.html";
-            }
-            return save;
         }
 
         public static void AddDomainToFile(string Id, string domain)
@@ -484,7 +413,7 @@ namespace HTMLJoiner
         {
             Convert.IsChecked = true;
             feed.RunWorkerAsync();
-            RunExternalApplication(AppType.EbookConverter,
+            Common.RunExternalApplication(AppType.EbookConverter,
                  string.Format("Custom.recipe {0}.mobi --authors {1}", @"c:\saveFile", "YesMen"));
         }
 

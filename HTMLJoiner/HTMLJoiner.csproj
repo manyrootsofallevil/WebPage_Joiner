@@ -59,7 +59,8 @@
       <Generator>MSBuild:Compile</Generator>
       <SubType>Designer</SubType>
     </ApplicationDefinition>
-    <Compile Include="HTMLPage.cs" />
+    <Compile Include="Common.cs" />
+    <Compile Include="CreateRSSData.cs" />
     <Compile Include="TagData.cs" />
     <Compile Include="Validator.cs" />
     <Page Include="ImproveMe.xaml">

@@ -1,4 +1,5 @@
-﻿using System;
+﻿using HtmlAgilityPack;
+using System;
 using System.Collections.Generic;
 using System.IO;
 using System.Linq;
@@ -9,13 +10,15 @@ namespace HostFeed
 {
     public class HTMLPage
     {
-        private string fileName, directory, extension, url, title,content;
+        private string fileName, directory, extension, url, title, content;
+        HtmlDocument docx; // = new HtmlDocument();
 
         public HTMLPage(string fileName, string directory, string extension)
         {
             this.fileName = fileName;
             this.directory = directory.EndsWith("\\") ? directory : string.Concat(directory, "\\");
             this.extension = extension;
+            getUrl();
         }
 
         public HTMLPage(string name)
@@ -23,15 +26,33 @@ namespace HostFeed
             this.fileName = Path.GetFileNameWithoutExtension(name);
             this.directory = string.Format(@"{0}\", Path.GetDirectoryName(name));
             this.extension = Path.GetExtension(name);
+            getUrl();
+            getContent();
         }
 
-        public string FileName { get; set; }
+        public string FileName
+        {
+            get { return fileName; }
+            set { fileName = value; }
+        }
         public string Directory { get; set; }
         public string Extension { get; set; }
-        public string Url { get; set; }
-        public string Title { get; set; }
-        public string Content { get; set; }
+        public string Url
+        {
+            get { return url; }
+            set
+            {
+                Url = value;
+            }
+        }
+        public string Title { get { return title; } set { Title = value; } }
+        public string Content
+        {
+            get { return content; }
+            set { Content = value; }
+        }
 
+        //By default this is the method used when binding.
         public override string ToString()
         {
             return fileName;
@@ -42,5 +63,42 @@ namespace HostFeed
             return string.Format("{0}{1}{2}", directory, fileName, extension);
         }
 
+        private void getUrl()
+        {
+
+            if (docx == null)
+            {
+                docx = new HtmlDocument();
+                docx.Load(this.GetPage(), System.Text.Encoding.UTF8, false);
+            }
+            var comment = docx.DocumentNode.ChildNodes
+            .Where(x => x.Name.Contains("comment") && x.InnerHtml.Contains("saved from"))
+            .FirstOrDefault();
+
+            if (comment != null)
+            {
+                this.url = comment.InnerText.Split(')')[1].Remove(comment.InnerText.Split(')')[1].Length - 3).Trim();
+            }
+        }
+
+        private void getContent()
+        {
+            if (docx == null)
+            {
+                docx = new HtmlDocument();
+                docx.Load(this.GetPage(), System.Text.Encoding.UTF8, false);
+            }
+
+            var temp = docx.DocumentNode.DescendantsAndSelf()
+                .Where(x => x.Name == "meta" && x.Attributes.Contains("name")
+                    && x.Attributes.Where(y => y.Value == "description").Count() == 1)
+                .FirstOrDefault();
+
+            if (temp != null)
+            {
+                this.content = temp.Attributes.Where(x => x.Name == "content").FirstOrDefault().Value;
+            }
+
+        }
     }
 }
