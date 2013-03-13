@@ -53,6 +53,7 @@ namespace HTMLJoiner
         private CollectionViewSource fileList = new CollectionViewSource();
 
         private readonly BackgroundWorker feed = new BackgroundWorker();
+        private string result = string.Empty;
 
         public MainWindow()
         {
@@ -64,9 +65,16 @@ namespace HTMLJoiner
             InitializeComponent();
             DataContext = this;
 
-            feed.DoWork += (o, e) => { Host.Start(); };
+            feed.DoWork += (o, e) => { Host.Start(); e.Result = true; };
             feed.RunWorkerCompleted += (o, e) =>
-            { //run ebook converter here. Give full path to recipe
+            {                
+                Common.RunExternalApplication(AppType.EbookConverter,
+                 string.Format("{0} {1}{2}.mobi --authors {3}",
+                 ConfigurationManager.AppSettings["newsrecipepath"],
+                 ConfigurationManager.AppSettings["savefilepath"],
+                 DateTime.Now.ToString("yyyyMMdd"),
+                 ConfigurationManager.AppSettings["author"]));
+                //TODO: move to its own background worker
             };
         }
 
@@ -153,8 +161,6 @@ namespace HTMLJoiner
             }
 
         }
-
-
 
         private void SaveHTMLToFile(SaveFileDialog save, HtmlDocument doc, string file)
         {
@@ -411,10 +417,20 @@ namespace HTMLJoiner
 
         private void Periodical_Click(object sender, RoutedEventArgs e)
         {
-            Convert.IsChecked = true;
+
+            if (this.ItemList.Count() < 1)
+            {
+                Common.LoadFiles(this.ItemList);
+
+            }
+
+            CreateRSSData mydata = new CreateRSSData();
+            mydata.CreateRSSItems(ItemList);
+
             feed.RunWorkerAsync();
-            Common.RunExternalApplication(AppType.EbookConverter,
-                 string.Format("Custom.recipe {0}.mobi --authors {1}", @"c:\saveFile", "YesMen"));
+
+           
+            
         }
 
 

@@ -1,5 +1,6 @@
 ﻿using System;
 using System.Collections.Generic;
+using System.Configuration;
 using System.IO;
 using System.Linq;
 using System.ServiceModel;
@@ -7,6 +8,7 @@ using System.ServiceModel.Syndication;
 using System.ServiceModel.Web;
 using System.Text;
 using System.Threading.Tasks;
+using System.Xml.Linq;
 
 namespace HostFeed
 {
@@ -23,60 +25,36 @@ namespace HostFeed
     public class BlogService : IBlog
     {
         static List<SyndicationItem> items = new List<SyndicationItem>();
+        SyndicationFeed feed;
 
         public Rss20FeedFormatter GetBlog()
+        {
+            feed = feed ?? getBlog();
+
+            return new Rss20FeedFormatter(feed);
+
+        }
+
+        private SyndicationFeed getBlog()
         {
             SyndicationFeed feed = new SyndicationFeed("My Blog Feed", "This is a test feed", new Uri("http://ManyRootsofAllEvil.blogger.com"));
             feed.Authors.Add(new SyndicationPerson("ManyRootsofAllEvil@ManyRootsofAllEvil.com"));
             feed.Categories.Add(new SyndicationCategory("Interesting articles"));
             feed.Description = new TextSyndicationContent("Articles");
 
-            List<SyndicationItem> items = new List<SyndicationItem>();
-            int counter =1;
+            items = new List<SyndicationItem>();
 
-            using (StreamReader sr = new StreamReader(@"C:\urls.txt"))
+            XDocument xdoc = XDocument.Load(ConfigurationManager.AppSettings["rsssource"]);
+
+            foreach (XElement element in xdoc.Root.Descendants())
             {
-                while(sr.Peek() >= 0)
-                {
-                items.Add(new SyndicationItem(string.Format("item{0}",counter), string.Format("content{0}",counter),
-                new Uri(sr.ReadLine())));
-                counter++;
-                }
+                items.Add(new SyndicationItem(element.Attribute("title").Value,
+                    element.Attribute("content").Value, new Uri(element.Attribute("URI").Value)));
             }
-
-
-           // GetItems();
-
-            //SyndicationItem item1 = new SyndicationItem(
-            //    "Item One",
-            //    "This is the content for item one",
-            //    new Uri("http://www.isitajoke.de/2013/01/19-beef-meat-label-overseeing-task-of.html"),
-            //    "ItemOneID",
-            //    DateTime.Now);
-
-            //SyndicationItem item2 = new SyndicationItem(
-            //    "Item Two",
-            //    "This is the content for item two",
-            //    new Uri("http://arstechnica.com/information-technology/2013/02/100gbps-and-beyond-what-lies-ahead-in-the-world-of-networking/"),
-            //    "ItemTwoID",
-            //    DateTime.Now);
-
-            //SyndicationItem item3 = new SyndicationItem(
-            //    "Item Three",
-            //    "This is the content for item three",
-            //    new Uri("http://www.technologyreview.com/news/507971/welcome-to-the-malware-industrial-complex/"),
-            //    "ItemThreeID",
-            //    DateTime.Now);
-
-
-
-            //items.Add(item1);
-            //items.Add(item2);
-            //items.Add(item3);
 
             feed.Items = items;
 
-            return new Rss20FeedFormatter(feed);
+            return feed;
         }
 
 

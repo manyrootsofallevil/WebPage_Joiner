@@ -79,6 +79,10 @@ namespace HostFeed
             {
                 this.url = comment.InnerText.Split(')')[1].Remove(comment.InnerText.Split(')')[1].Length - 3).Trim();
             }
+            else
+            {
+                throw new Exception("Could not find url");
+            }
         }
 
         private void getContent()
@@ -88,16 +92,15 @@ namespace HostFeed
                 docx = new HtmlDocument();
                 docx.Load(this.GetPage(), System.Text.Encoding.UTF8, false);
             }
-
+            //TODO: look for more content.
             var temp = docx.DocumentNode.DescendantsAndSelf()
                 .Where(x => x.Name == "meta" && x.Attributes.Contains("name")
                     && x.Attributes.Where(y => y.Value == "description").Count() == 1)
                 .FirstOrDefault();
 
-            if (temp != null)
-            {
-                this.content = temp.Attributes.Where(x => x.Name == "content").FirstOrDefault().Value;
-            }
+                this.content = temp != null ? 
+                    temp.Attributes.Where(x => x.Name == "content").FirstOrDefault().Value: string.Empty;
+
 
         }
     }
