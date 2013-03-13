@@ -41,7 +41,10 @@ namespace HTMLJoiner
     //so that thye can be feed to 1.
     // 3. Convert individual files to mobi, is this needed?
 
-
+    //TODO: Add a waiting thingy while processing
+    //TODO: Either open ebook or say where it is.
+    //TODO: Only delete when delete is marked
+    //TODO: Use MVVM pattern
 
     /// <summary>
     /// Interaction logic for MainWindow.xaml
@@ -53,7 +56,8 @@ namespace HTMLJoiner
         private CollectionViewSource fileList = new CollectionViewSource();
 
         private readonly BackgroundWorker feed = new BackgroundWorker();
-        private string result = string.Empty;
+        private readonly BackgroundWorker convert = new BackgroundWorker();
+        private bool CompletedConversion = false;
 
         public MainWindow()
         {
@@ -65,17 +69,45 @@ namespace HTMLJoiner
             InitializeComponent();
             DataContext = this;
 
-            feed.DoWork += (o, e) => { Host.Start(); e.Result = true; };
-            feed.RunWorkerCompleted += (o, e) =>
-            {                
-                Common.RunExternalApplication(AppType.EbookConverter,
-                 string.Format("{0} {1}{2}.mobi --authors {3}",
-                 ConfigurationManager.AppSettings["newsrecipepath"],
-                 ConfigurationManager.AppSettings["savefilepath"],
-                 DateTime.Now.ToString("yyyyMMdd"),
-                 ConfigurationManager.AppSettings["author"]));
-                //TODO: move to its own background worker
+            feed.DoWork += (o, e) =>
+            {
+                Dispatcher.Invoke((Action)(() => Periodical.IsEnabled = false ));
+
+                Host.Start(); e.Result = true;
             };
+
+            feed.RunWorkerCompleted += (o, e) =>
+            {
+                if ((bool)e.Result)
+                {
+
+
+                    CompletedConversion = Common.RunExternalApplication(AppType.EbookConverter,
+                               string.Format("{0} {1}{2}.mobi --authors {3}",
+                               ConfigurationManager.AppSettings["newsrecipepath"],
+                               ConfigurationManager.AppSettings["savefilepath"],
+                               DateTime.Now.ToString("yyyyMMdd"),
+                               ConfigurationManager.AppSettings["author"]));
+                    
+                    //Should really migrate the whole thing to use MVVM.
+                    if (CompletedConversion)
+                    {
+                        foreach (var item in this.ItemList)
+                        {
+                            File.Delete(item.GetPage());
+                        }
+
+                        Items.DataContext = null;
+                        this.ItemList = new ObservableCollection<HTMLPage>();
+                    }
+
+
+                }
+                Dispatcher.Invoke((Action)(() => Periodical.IsEnabled = true));
+
+            };
+
+
         }
 
         public CollectionViewSource FileList
@@ -108,7 +140,7 @@ namespace HTMLJoiner
                 CreateRSSData mydata = new CreateRSSData();
                 mydata.CreateRSSItems(ItemList);
 
-                     
+
                 try
                 {
                     HtmlDocument doc = new HtmlDocument();
@@ -429,8 +461,6 @@ namespace HTMLJoiner
 
             feed.RunWorkerAsync();
 
-           
-            
         }
 
 

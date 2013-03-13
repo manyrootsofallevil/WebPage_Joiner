@@ -50,37 +50,44 @@ namespace HTMLJoiner
             return save;
         }
 
-        public static void RunExternalApplication(AppType app, string arguments)
+        public static bool RunExternalApplication(AppType app, string arguments)
         {
+            bool output = false;
+
             switch (app)
             {
                 case AppType.Browser:
-                    Process.Start(ConfigurationManager.AppSettings["Browser"], arguments);
+                    Process.Start(ConfigurationManager.AppSettings["Browser"], arguments);                   
                     break;
                 case AppType.EbookConverter:
-                    Process.Start(ConfigurationManager.AppSettings["EbookConverter"], arguments);
+                    //Process.Start(, arguments);
+                    var proc = new Process
+                    {
+                        StartInfo = new ProcessStartInfo
+                        {
+                            FileName = ConfigurationManager.AppSettings["EbookConverter"],
+                            Arguments = arguments,
+                            UseShellExecute = false,
+                            RedirectStandardOutput = true,
+                            CreateNoWindow = true
+                        }
+                    };
+                    proc.Start();
+                    while (!proc.StandardOutput.EndOfStream)
+                    {
+                        string line = proc.StandardOutput.ReadLine().ToLower();
+                        if (line.Contains("output saved"))
+                        {
+                            output=true;
+                        }
+                    }
                     break;
 
+                   
 
             }
             //TODO: Have a look at this to get the ouput from ebook converter process
-            //            var proc = new Process {
-            //    StartInfo = new ProcessStartInfo {
-            //        FileName = "program.exe",
-            //        Arguments = "command line arguments to your executable",
-            //        UseShellExecute = false,
-            //        RedirectStandardOutput = true,
-            //        CreateNoWindow = true
-            //    }
-            //};
-            //then start the process and read from it:
-
-            //proc.Start();
-            //while (!proc.StandardOutput.EndOfStream)
-            //{
-            //    string line = proc.StandardOutput.ReadLine();
-            //    // do something with line
-            //}
+            return output;
         }
 
     }

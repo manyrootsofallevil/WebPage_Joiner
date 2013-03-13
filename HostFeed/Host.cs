@@ -12,17 +12,26 @@ namespace HostFeed
 {
     //Looks like this needs to run with elevated permissions
     //TODO: Sort this mess out.
-    public class Host
+    public static class Host
     {
         static Uri baseAddress = new Uri("http://localhost:8000/BlogService");
         static WebServiceHost svcHost = new WebServiceHost(typeof(BlogService), baseAddress);
+        static bool opened = false;
+
+
 
         public static void Start()
         {
 
+            svcHost.Opened += (o, e) => { opened = true; };
+            svcHost.Closed += (o, e) => { opened = false; };
+
             try
             {
-                svcHost.Open();
+                if (!opened)
+                {
+                    svcHost.Open();
+                }
             }
             catch (CommunicationException ce)
             {
