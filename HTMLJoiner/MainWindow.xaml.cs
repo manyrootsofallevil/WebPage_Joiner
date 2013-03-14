@@ -42,8 +42,6 @@ namespace HTMLJoiner
     // 3. Convert individual files to mobi, is this needed?
 
     //TODO: Add a waiting thingy while processing
-    //TODO: Either open ebook or say where it is.
-    //TODO: Only delete when delete is marked
     //TODO: Use MVVM pattern
 
     /// <summary>
@@ -81,27 +79,44 @@ namespace HTMLJoiner
                 if ((bool)e.Result)
                 {
 
-
-                    CompletedConversion = Common.RunExternalApplication(AppType.EbookConverter,
-                               string.Format("{0} {1}{2}.mobi --authors {3}",
-                               ConfigurationManager.AppSettings["newsrecipepath"],
-                               ConfigurationManager.AppSettings["savefilepath"],
-                               DateTime.Now.ToString("yyyyMMdd"),
-                               ConfigurationManager.AppSettings["author"]));
-                    
-                    //Should really migrate the whole thing to use MVVM.
-                    if (CompletedConversion)
+                    if (this.ItemList.Count() >0)
                     {
-                        foreach (var item in this.ItemList)
+                        CompletedConversion = Common.RunExternalApplication(AppType.EbookConverter,
+                                   string.Format("{0} {1}{2}.mobi --authors {3}",
+                                   ConfigurationManager.AppSettings["newsrecipepath"],
+                                   ConfigurationManager.AppSettings["savefilepath"],
+                                   DateTime.Now.ToString("yyyyMMdd"),
+                                   ConfigurationManager.AppSettings["author"]));
+
+                        //Should really migrate the whole thing to use MVVM.
+                        if (CompletedConversion)
                         {
-                            File.Delete(item.GetPage());
+                            if ((bool)Delete.IsChecked)
+                            {
+                                foreach (var item in this.ItemList)
+                                {
+                                    File.Delete(item.GetPage());
+                                }
+                            }
+
+                            Items.DataContext = null;
+                            this.ItemList = new ObservableCollection<HTMLPage>();
+
+                            if ((bool)OpenBook.IsChecked)
+                            {
+                                Common.RunExternalApplication(AppType.EbookViewer,
+                                    string.Format("{1}{0}.mobi",DateTime.Now.ToString("yyyyMMdd"), ConfigurationManager.AppSettings["savefilepath"]));
+                            }
+                            else
+                            {
+                                Dispatcher.Invoke((Action)(() => 
+                                    MessageBox.Show(string.Format("Converted book can be found here {1}{0}.mobi",DateTime.Now.ToString("yyyyMMdd") 
+                                    ,ConfigurationManager.AppSettings["savefilepath"]))));
+                            }
                         }
 
-                        Items.DataContext = null;
-                        this.ItemList = new ObservableCollection<HTMLPage>();
+
                     }
-
-
                 }
                 Dispatcher.Invoke((Action)(() => Periodical.IsEnabled = true));
 
@@ -120,6 +135,29 @@ namespace HTMLJoiner
         {
             get;
             private set;
+        }
+
+        private void Periodical_Click(object sender, RoutedEventArgs e)
+        {
+
+            if (this.ItemList.Count() < 1)
+            {
+                try
+                {
+                    Common.LoadFiles(this.ItemList);
+                }
+                catch (Exception ex)
+                {
+                    MessageBox.Show(string.Format(ex.Message));
+                }
+
+            }
+
+            CreateRSSData mydata = new CreateRSSData();
+            mydata.CreateRSSItems(ItemList);
+
+            feed.RunWorkerAsync();
+
         }
 
         private void LoadFiles_Click(object sender, RoutedEventArgs e)
@@ -422,46 +460,14 @@ namespace HTMLJoiner
             }
         }
 
-        //NOT in USE
-        private HtmlNode FindInner(HtmlNode node)
-        {
-            HtmlNode result = null;
-
-            HtmlNode content = node.Descendants()
-            .Where(x => x.Id.Contains("main") || x.Id.Contains("article") || x.Id.Contains("content") || x.Id.Contains("container")).FirstOrDefault();
-
-            if (content != null)
-            {
-                result = FindInner(content);
-            }
-            else
-            {
-                result = content;
-            }
-
-            return result;
-        }
+      
 
         private static bool CheckDomainExists(XDocument domains, string domain)
         {
             return domains.Root.Descendants().Where(x => x.Name == domain).Count() == 1;
         }
 
-        private void Periodical_Click(object sender, RoutedEventArgs e)
-        {
-
-            if (this.ItemList.Count() < 1)
-            {
-                Common.LoadFiles(this.ItemList);
-
-            }
-
-            CreateRSSData mydata = new CreateRSSData();
-            mydata.CreateRSSItems(ItemList);
-
-            feed.RunWorkerAsync();
-
-        }
+    
 
 
 

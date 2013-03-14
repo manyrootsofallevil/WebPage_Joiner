@@ -11,7 +11,7 @@ using System.Threading.Tasks;
 
 namespace HTMLJoiner
 {
-    public enum AppType { Browser, EbookConverter };
+    public enum AppType { Browser, EbookConverter, EbookViewer };
 
     public static class Common
     {
@@ -81,6 +81,9 @@ namespace HTMLJoiner
                             output=true;
                         }
                     }
+                    break;
+                case AppType.EbookViewer:
+                    Process.Start(ConfigurationManager.AppSettings["EbookViewer"],arguments);
                     break;
 
                    

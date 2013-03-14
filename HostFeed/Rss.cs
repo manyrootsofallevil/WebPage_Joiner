@@ -48,8 +48,15 @@ namespace HostFeed
 
             foreach (XElement element in xdoc.Root.Descendants())
             {
-                items.Add(new SyndicationItem(element.Attribute("title").Value,
-                    element.Attribute("content").Value, new Uri(element.Attribute("URI").Value)));
+                try
+                {
+                    items.Add(new SyndicationItem(element.Attribute("title").Value,
+                              element.Attribute("content").Value, new Uri(element.Attribute("URI").Value)));
+                }
+                catch (Exception)
+                {
+                    //Let's swallow the exception. perphas we should log it :)
+                }
             }
 
             feed.Items = items;

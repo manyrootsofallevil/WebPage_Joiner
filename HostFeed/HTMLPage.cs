@@ -71,17 +71,50 @@ namespace HostFeed
                 docx = new HtmlDocument();
                 docx.Load(this.GetPage(), System.Text.Encoding.UTF8, false);
             }
+            
+            //Complete Save pages from Chrome will contain something like this
+            //<!-- saved from url=(0024)http://www.schneier.com/ -->
             var comment = docx.DocumentNode.ChildNodes
             .Where(x => x.Name.Contains("comment") && x.InnerHtml.Contains("saved from"))
             .FirstOrDefault();
 
-            if (comment != null)
+            //Failing that we look for <link rel=canoninal href="">
+            var link = docx.DocumentNode.DescendantsAndSelf()
+                .Where(x => x.Name == "link" 
+                    && x.Attributes.Where(y=>y.Name=="rel" && y.Value=="canonical").Count()==1)
+                .FirstOrDefault();
+
+            //<meta property="og:url" content="http://www.alternet.org/silicon-valley-reportedly-full-stoners" />
+
+            var meta = docx.DocumentNode.DescendantsAndSelf()
+                .Where(x => x.Name == "meta"
+                    && x.Attributes.Where(y => y.Name == "property" && y.Value == "og:url").Count() == 1)
+                .FirstOrDefault();
+
+            if (link !=null)
+            {
+                this.url = link.Attributes.Where(x=>x.Name=="href").FirstOrDefault().Value;
+
+                //This is wrong in so many levels.
+                try
+                {
+                   Uri test = new Uri(this.url);
+                }
+                catch
+                {
+                    if (meta !=null)
+                    {
+                        this.url = meta.Attributes.Where(x => x.Name == "content").FirstOrDefault().Value;
+                    }
+                }
+            }
+            else if(comment != null)
             {
                 this.url = comment.InnerText.Split(')')[1].Remove(comment.InnerText.Split(')')[1].Length - 3).Trim();
             }
             else
             {
-                throw new Exception("Could not find url");
+                throw new Exception(string.Format("Could not find url for {0}",this.GetPage()));
             }
         }
 
