@@ -69,7 +69,7 @@ namespace HTMLJoiner
 
             feed.DoWork += (o, e) =>
             {
-                Dispatcher.Invoke((Action)(() => Periodical.IsEnabled = false ));
+                Dispatcher.Invoke((Action)(() => Periodical.IsEnabled = false));
 
                 Host.Start(); e.Result = true;
             };
@@ -78,9 +78,21 @@ namespace HTMLJoiner
             {
                 if ((bool)e.Result)
                 {
+                    convert.RunWorkerAsync();
+                }
+                else
+                {
+                    Dispatcher.Invoke((Action)(() => MessageBox.Show("An Error Occurred while initiating the local server")));
+                    Dispatcher.Invoke((Action)(() => Periodical.IsEnabled = true));
+                }
 
-                    if (this.ItemList.Count() >0)
+            };
+
+            convert.DoWork += (o, e) =>
+                {
+                    if (this.ItemList.Count() > 0)
                     {
+
                         CompletedConversion = Common.RunExternalApplication(AppType.EbookConverter,
                                    string.Format("{0} {1}{2}.mobi --authors {3}",
                                    ConfigurationManager.AppSettings["newsrecipepath"],
@@ -91,7 +103,7 @@ namespace HTMLJoiner
                         //Should really migrate the whole thing to use MVVM.
                         if (CompletedConversion)
                         {
-                            if ((bool)Delete.IsChecked)
+                            if (Dispatcher.Invoke((Func<bool>)(() => (bool)Delete.IsChecked)))
                             {
                                 foreach (var item in this.ItemList)
                                 {
@@ -99,28 +111,31 @@ namespace HTMLJoiner
                                 }
                             }
 
-                            Items.DataContext = null;
-                            this.ItemList = new ObservableCollection<HTMLPage>();
+                            Dispatcher.Invoke((Action)(() => Items.DataContext = null));
 
-                            if ((bool)OpenBook.IsChecked)
+                            Dispatcher.Invoke((Action)(() => this.ItemList = new ObservableCollection<HTMLPage>()));
+
+                            if (Dispatcher.Invoke((Func<bool>)(() => (bool)OpenBook.IsChecked)))
                             {
                                 Common.RunExternalApplication(AppType.EbookViewer,
-                                    string.Format("{1}{0}.mobi",DateTime.Now.ToString("yyyyMMdd"), ConfigurationManager.AppSettings["savefilepath"]));
+                                    string.Format("{1}{0}.mobi", DateTime.Now.ToString("yyyyMMdd"), ConfigurationManager.AppSettings["savefilepath"]));
                             }
                             else
                             {
-                                Dispatcher.Invoke((Action)(() => 
-                                    MessageBox.Show(string.Format("Converted book can be found here {1}{0}.mobi",DateTime.Now.ToString("yyyyMMdd") 
-                                    ,ConfigurationManager.AppSettings["savefilepath"]))));
+                                Dispatcher.Invoke((Action)(() =>
+                                    MessageBox.Show(string.Format("Converted book can be found here {1}{0}.mobi", DateTime.Now.ToString("yyyyMMdd")
+                                    , ConfigurationManager.AppSettings["savefilepath"]))));
                             }
                         }
 
 
                     }
-                }
-                Dispatcher.Invoke((Action)(() => Periodical.IsEnabled = true));
+                };
 
-            };
+            convert.RunWorkerCompleted += (o, e) =>
+                {
+                    Dispatcher.Invoke((Action)(() => Periodical.IsEnabled = true));
+                };
 
 
         }
@@ -460,14 +475,14 @@ namespace HTMLJoiner
             }
         }
 
-      
+
 
         private static bool CheckDomainExists(XDocument domains, string domain)
         {
             return domains.Root.Descendants().Where(x => x.Name == domain).Count() == 1;
         }
 
-    
+
 
 
 
