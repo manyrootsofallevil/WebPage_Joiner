@@ -65,6 +65,8 @@ namespace HTMLJoiner
             //   ListSortDirection.Ascending));
 
             InitializeComponent();
+
+            Wait.IsEnabled = false;
             DataContext = this;
 
             feed.DoWork += (o, e) =>
@@ -83,7 +85,7 @@ namespace HTMLJoiner
                 else
                 {
                     Dispatcher.Invoke((Action)(() => MessageBox.Show("An Error Occurred while initiating the local server")));
-                    Dispatcher.Invoke((Action)(() => Periodical.IsEnabled = true));
+                    UpdateUIuponCompletion();  
                 }
 
             };
@@ -134,10 +136,16 @@ namespace HTMLJoiner
 
             convert.RunWorkerCompleted += (o, e) =>
                 {
-                    Dispatcher.Invoke((Action)(() => Periodical.IsEnabled = true));
+                    UpdateUIuponCompletion();                    
                 };
 
 
+        }
+
+        private void UpdateUIuponCompletion()
+        {
+            Dispatcher.Invoke((Action)(() => Periodical.IsEnabled = true));
+            Dispatcher.Invoke((Action)(() => Wait.Visibility = Visibility.Hidden));
         }
 
         public CollectionViewSource FileList
@@ -167,6 +175,8 @@ namespace HTMLJoiner
                 }
 
             }
+
+            Wait.Visibility = Visibility.Visible;
 
             CreateRSSData mydata = new CreateRSSData();
             mydata.CreateRSSItems(ItemList);

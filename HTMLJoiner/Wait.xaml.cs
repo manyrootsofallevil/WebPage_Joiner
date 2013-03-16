@@ -4,7 +4,7 @@ using System.Windows.Controls;
 using System.Windows.Threading;
 using System.Windows.Input;
 
-namespace ThreadingComponent
+namespace HTMLJoiner
 {
     /// <summary>
     /// A circular type progress bar, that is simliar to popular web based
