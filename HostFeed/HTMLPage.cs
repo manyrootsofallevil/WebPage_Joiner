@@ -78,6 +78,8 @@ namespace HostFeed
             .Where(x => x.Name.Contains("comment") && x.InnerHtml.Contains("saved from"))
             .FirstOrDefault();
 
+            //annoyingly ars technica have the same canonical link for all their pages.
+
             //Failing that we look for <link rel=canoninal href="">
             var link = docx.DocumentNode.DescendantsAndSelf()
                 .Where(x => x.Name == "link" 
