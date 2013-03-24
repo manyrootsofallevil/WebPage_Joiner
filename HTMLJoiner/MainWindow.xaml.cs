@@ -85,7 +85,7 @@ namespace HTMLJoiner
                 else
                 {
                     Dispatcher.Invoke((Action)(() => MessageBox.Show("An Error Occurred while initiating the local server")));
-                    UpdateUIuponCompletion();  
+                    UpdateUIuponCompletion();
                 }
 
             };
@@ -136,7 +136,7 @@ namespace HTMLJoiner
 
             convert.RunWorkerCompleted += (o, e) =>
                 {
-                    UpdateUIuponCompletion();                    
+                    UpdateUIuponCompletion();
                 };
 
 
@@ -146,6 +146,7 @@ namespace HTMLJoiner
         {
             Dispatcher.Invoke((Action)(() => Periodical.IsEnabled = true));
             Dispatcher.Invoke((Action)(() => Wait.Visibility = Visibility.Hidden));
+            this.IsEnabled = true;
         }
 
         public CollectionViewSource FileList
@@ -177,6 +178,7 @@ namespace HTMLJoiner
             }
 
             Wait.Visibility = Visibility.Visible;
+            this.IsEnabled = false;
 
             CreateRSSData mydata = new CreateRSSData();
             mydata.CreateRSSItems(ItemList);
@@ -193,16 +195,12 @@ namespace HTMLJoiner
         private void SaveFile_Click(object sender, RoutedEventArgs e)
         {
 
-            //if (Items.SelectedItems.Count > 0)
-            //{
+            Common.LoadFiles(this.ItemList);
+
             SaveFileDialog save = Common.InstatiateSaveDialog(ItemList.Count() > 1 ? true : false);
 
             if ((bool)save.ShowDialog())
             {
-
-                CreateRSSData mydata = new CreateRSSData();
-                mydata.CreateRSSItems(ItemList);
-
 
                 try
                 {
@@ -211,33 +209,24 @@ namespace HTMLJoiner
                     //foreach (string file in Items.SelectedItems)
                     foreach (HTMLPage page in FileList.View)
                     {
-                        //SaveHTMLToFile(save, doc, page.GetPage());
+                        SaveHTMLToFile(save, doc, page.GetPage());
                     }
 
-                    if ((bool)Convert.IsChecked)
-                    {
 
-                        string saveFile = string.Format(@"{0}\{1}", System.IO.Path.GetDirectoryName(save.FileName),
-                            System.IO.Path.GetFileNameWithoutExtension(save.FileName));
-                        //TODO: Add Author, etc...
-                        //TODO: http://manual.calibre-ebook.com/conversion.html
 
-                        //ADD <H1> tag with article title before each new page.
+                    string saveFile = string.Format(@"{0}\{1}", System.IO.Path.GetDirectoryName(save.FileName),
+                        System.IO.Path.GetFileNameWithoutExtension(save.FileName));
 
-                        Common.RunExternalApplication(AppType.EbookConverter,
-                            string.Format("{0} {1}.mobi --authors {2}", save.FileName, saveFile, "YestMen"));
-                    }
+                    Common.RunExternalApplication(AppType.EbookConverter,
+                        string.Format("{0} {1}.mobi --authors {2}", save.FileName, saveFile, "YesMen"));
+
                 }
                 catch (Exception ex)
                 {
                     MessageBox.Show(string.Format("Error: {0} - {1}.", ex, ex.GetType()));
                 }
             }
-            //}
-            //else
-            //{
-            //    MessageBox.Show("Select at least one item");
-            //}
+
         }
 
         private void Clear_Click(object sender, RoutedEventArgs e)
@@ -317,6 +306,7 @@ namespace HTMLJoiner
                 //Remove all the nasties and Save to File
                 PurifyAndSave(save.FileName, doc.DocumentNode, doc.Encoding);
             }
+
 
 
             //Starting Browser to check how well the page is being displayed
@@ -473,10 +463,9 @@ namespace HTMLJoiner
 
                 using (StreamWriter sw = new StreamWriter(fileName, true, encoding))
                 {
-                    //TODO: What the hell is this?????
-                    //answer. Encoding issues.
-                    //sw.Write(content.InnerHtml.Replace("â€™", "'").Replace("â€œ", "\"").Replace("â€”", "—").Replace("â€", "\""));
                     sw.Write(content.InnerHtml);
+                    //Calibre will assume a new page whenever it finds an H1 tag, so this will ensure that articles are separated
+                    sw.WriteLine("<H1></H1>");
                 }
             }
             catch (Exception ex)

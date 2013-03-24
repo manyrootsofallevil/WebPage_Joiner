@@ -9,21 +9,21 @@
     </Window.TaskbarItemInfo>
 
 
-    <Grid>
+    <Grid >
 
         <control:LoadingAnimation HorizontalAlignment="Center" VerticalAlignment="Center" x:Name="Wait" Margin="462,286,48,34" Visibility="Hidden"/>
-        <Button Content="Load Files" HorizontalAlignment="Left" Margin="32,319,0,0" VerticalAlignment="Top" Width="75" Name="LoadFiles" Click="LoadFiles_Click"/>
-        <Button Content="Save File" HorizontalAlignment="Left" Margin="129,319,0,0" VerticalAlignment="Top" Width="93" Name="SaveFile" Click="SaveFile_Click" Visibility="Collapsed"/>
+        <Button Content="Load Files" HorizontalAlignment="Left" Margin="147,280,0,0" VerticalAlignment="Top" Width="75" Name="LoadFiles" Click="LoadFiles_Click"/>
+        <Button Content="Create Single Article" HorizontalAlignment="Left" Margin="32,319,0,0" VerticalAlignment="Top" Width="190" Name="SaveFile" Click="SaveFile_Click" Visibility="Visible"/>
         <ListBox Name="Items" HorizontalAlignment="Left" Height="231" Margin="32,23,0,0" VerticalAlignment="Top" Width="530" 
                  SelectionMode="Extended" ItemsSource="{Binding FileList.View}" >
 
         </ListBox>
         <Button Name="Clear" Content="Clear List" HorizontalAlignment="Left" Margin="32,280,0,0" VerticalAlignment="Top" Width="75" Click="Clear_Click"/>
         <Button Name="ClearSelected" Content="Clear Selected" HorizontalAlignment="Left" Margin="129,280,0,0" VerticalAlignment="Top" Width="93" Click="ClearSelected_Click" Visibility="Collapsed"/>
-        <CheckBox Name="Learn" Content="Learning Mode" HorizontalAlignment="Left" Margin="417,325,0,0" VerticalAlignment="Top" Width="103" Visibility="Hidden"/>
+        <CheckBox Name="Learn" Content="Learning Mode" HorizontalAlignment="Left" Margin="248,325,0,0" VerticalAlignment="Top" Width="103" Visibility="Visible"/>
         <CheckBox Name="Convert" Content="Convert to Mobi" HorizontalAlignment="Left" Margin="417,280,0,0" VerticalAlignment="Top" Width="119" Visibility="Hidden"/>
-        <CheckBox Name="Delete" Content="Delete Processed Files" HorizontalAlignment="Left" Margin="248,280,0,0" VerticalAlignment="Top"/>
-        <Button Name="Periodical" Content="Convert to mobi" HorizontalAlignment="Left" Margin="32,361,0,0" VerticalAlignment="Top" Width="190" Click="Periodical_Click"/>
-        <CheckBox x:Name="OpenBook" Content="Open book after conversion" HorizontalAlignment="Left" Margin="248,319,0,0" VerticalAlignment="Top"/>
+        <CheckBox Name="Delete" Content="Delete Processed Files" HorizontalAlignment="Left" Margin="248,280,0,0" VerticalAlignment="Top" IsChecked="True"/>
+        <Button Name="Periodical" Content="Create Periodical" HorizontalAlignment="Left" Margin="32,361,0,0" VerticalAlignment="Top" Width="190" Click="Periodical_Click"/>
+        <CheckBox x:Name="OpenBook" Content="Open book after conversion" HorizontalAlignment="Left" Margin="248,301,0,0" VerticalAlignment="Top" IsChecked="True"/>
     </Grid>
 </Window>
