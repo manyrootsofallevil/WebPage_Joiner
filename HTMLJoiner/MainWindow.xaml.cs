@@ -95,12 +95,17 @@ namespace HTMLJoiner
                     if (this.ItemList.Count() > 0)
                     {
 
+
+                        string exePath = System.IO.Path.GetDirectoryName(System.Reflection.Assembly.GetExecutingAssembly().Location);
+
                         CompletedConversion = Common.RunExternalApplication(AppType.EbookConverter,
-                                   string.Format("{0} {1}{2}.mobi --authors {3}",
+                                   string.Format("{0} {1}{2}.mobi --authors {3} --title {4} --cover {5}",
                                    ConfigurationManager.AppSettings["newsrecipepath"],
                                    ConfigurationManager.AppSettings["savefilepath"],
                                    DateTime.Now.ToString("yyyyMMdd"),
-                                   ConfigurationManager.AppSettings["author"]));
+                                   ConfigurationManager.AppSettings["author"],
+                                   DateTime.Now.ToString("yyyyMMdd"),
+                                   string.Format("\"{0}\\Images\\beastie.jpg\"",exePath) ));
 
                         //Should really migrate the whole thing to use MVVM.
                         if (CompletedConversion)
@@ -218,7 +223,8 @@ namespace HTMLJoiner
                         System.IO.Path.GetFileNameWithoutExtension(save.FileName));
 
                     Common.RunExternalApplication(AppType.EbookConverter,
-                        string.Format("{0} {1}.mobi --authors {2}", save.FileName, saveFile, "YesMen"));
+                        string.Format("{0} {1}.mobi --authors {2} --title {3}", save.FileName, saveFile, "YesMen",
+                        string.Format("Summary {0}", DateTime.Now.ToString("yyyyMMdd"))));
 
                 }
                 catch (Exception ex)
