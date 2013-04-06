@@ -23,7 +23,8 @@
         <CheckBox Name="Learn" Content="Learning Mode" HorizontalAlignment="Left" Margin="248,325,0,0" VerticalAlignment="Top" Width="103" Visibility="Visible"/>
         <CheckBox Name="Convert" Content="Convert to Mobi" HorizontalAlignment="Left" Margin="417,280,0,0" VerticalAlignment="Top" Width="119" Visibility="Hidden"/>
         <CheckBox Name="Delete" Content="Delete Processed Files" HorizontalAlignment="Left" Margin="248,280,0,0" VerticalAlignment="Top" IsChecked="True"/>
-        <Button Name="Periodical" Content="Create Periodical" HorizontalAlignment="Left" Margin="32,361,0,0" VerticalAlignment="Top" Width="190" Click="Periodical_Click"/>
+        <Button Name="Periodical" Content="Create Periodical from WebPages" HorizontalAlignment="Left" Margin="32,361,0,0" VerticalAlignment="Top" Width="190" Click="Periodical_Click"/>
         <CheckBox x:Name="OpenBook" Content="Open book after conversion" HorizontalAlignment="Left" Margin="248,301,0,0" VerticalAlignment="Top" IsChecked="True"/>
+        <Button x:Name="PeriodicalUrls" Content="Create Periodical from Urls" HorizontalAlignment="Left" Margin="248,361,0,0" VerticalAlignment="Top" Width="190" Click="PeriodicalUrls_Click"/>
     </Grid>
 </Window>

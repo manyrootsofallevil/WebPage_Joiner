@@ -98,6 +98,10 @@ namespace HTMLJoiner
 
                         string exePath = System.IO.Path.GetDirectoryName(System.Reflection.Assembly.GetExecutingAssembly().Location);
 
+                        ImageModifier image = new ImageModifier(string.Format("{0}\\Images\\beastie.jpg", exePath));
+
+                        image.WriteMessageToImage(DateTime.Now.ToLongDateString(), "modifiedbeastie.jpg");
+
                         CompletedConversion = Common.RunExternalApplication(AppType.EbookConverter,
                                    string.Format("{0} {1}{2}.mobi --authors {3} --title {4} --cover {5}",
                                    ConfigurationManager.AppSettings["newsrecipepath"],
@@ -105,16 +109,22 @@ namespace HTMLJoiner
                                    DateTime.Now.ToString("yyyyMMdd"),
                                    ConfigurationManager.AppSettings["author"],
                                    DateTime.Now.ToString("yyyyMMdd"),
-                                   string.Format("\"{0}\\Images\\beastie.jpg\"",exePath) ));
+                                   string.Format("\"{0}\\modifiedbeastie.jpg\"",exePath) ));
 
                         //Should really migrate the whole thing to use MVVM.
                         if (CompletedConversion)
                         {
+                            Emailer.Hotmail(string.Format("{0}{1}.mobi", ConfigurationManager.AppSettings["savefilepath"],
+                                   DateTime.Now.ToString("yyyyMMdd")));
+
                             if (Dispatcher.Invoke((Func<bool>)(() => (bool)Delete.IsChecked)))
                             {
                                 foreach (var item in this.ItemList)
                                 {
-                                    File.Delete(item.GetPage());
+                                    if (item.FileName != item.Url)
+                                    {
+                                        File.Delete(item.GetPage());
+                                    }
                                 }
                             }
 
@@ -166,6 +176,7 @@ namespace HTMLJoiner
             private set;
         }
 
+        #region events
         private void Periodical_Click(object sender, RoutedEventArgs e)
         {
 
@@ -174,6 +185,7 @@ namespace HTMLJoiner
                 try
                 {
                     Common.LoadFiles(this.ItemList);
+
                 }
                 catch (Exception ex)
                 {
@@ -190,6 +202,43 @@ namespace HTMLJoiner
 
             feed.RunWorkerAsync();
 
+        }
+
+        private void PeriodicalUrls_Click(object sender, RoutedEventArgs e)
+        {
+            if (this.ItemList.Count() < 1)
+            {
+                try
+                {
+
+                    List<string> files = Common.LoadFiles();
+
+                    foreach (string file in files)
+                    {
+                        using (StreamReader sr = new StreamReader(file))
+                        {
+                            while (!sr.EndOfStream)
+                            {
+                                ItemList.Add(new HTMLPage(sr.ReadLine(), true));
+                            }
+                        }
+                    }
+
+                }
+                catch (Exception ex)
+                {
+                    MessageBox.Show(ex.ToString());
+                }
+
+            }
+
+            Wait.Visibility = Visibility.Visible;
+            this.IsEnabled = false;
+
+            CreateRSSData mydata = new CreateRSSData();
+            mydata.CreateRSSItems(ItemList);
+
+            feed.RunWorkerAsync();
         }
 
         private void LoadFiles_Click(object sender, RoutedEventArgs e)
@@ -250,8 +299,10 @@ namespace HTMLJoiner
                 }
             }
 
-        }
+        } 
+        #endregion
 
+        #region methods
         private void SaveHTMLToFile(SaveFileDialog save, HtmlDocument doc, string file)
         {
             //Allthough this is inefficient, it ensures that it will process recently added domains correctly
@@ -486,11 +537,9 @@ namespace HTMLJoiner
         {
             return domains.Root.Descendants().Where(x => x.Name == domain).Count() == 1;
         }
+        
+        #endregion
 
 
-
-
-
-        //TODO: Delete directoires as well as files if appropriate
     }
 }

@@ -30,6 +30,13 @@ namespace HostFeed
             getContent();
         }
 
+        public HTMLPage(string url, bool isUrl)
+        {
+            this.url = url;
+            this.content = url;
+            this.fileName = url;
+        }
+
         public string FileName
         {
             get { return fileName; }

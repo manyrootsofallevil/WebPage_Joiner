@@ -68,6 +68,8 @@
     <Compile Include="Control\Block.xaml.cs" />
     <Compile Include="Control\LoadingAnimation.xaml.cs" />
     <Compile Include="CreateRSSData.cs" />
+    <Compile Include="Emailer.cs" />
+    <Compile Include="ImageModifier.cs" />
     <Compile Include="TagData.cs" />
     <Compile Include="Validator.cs" />
     <Compile Include="Wait.xaml.cs">

@@ -33,6 +33,25 @@ namespace HTMLJoiner
             }
         }
 
+        public static List<string> LoadFiles()
+        {
+            List<string> result = null;
+
+            OpenFileDialog files = new OpenFileDialog();
+            files.AddExtension = true;
+            files.CheckFileExists = true;
+            files.Multiselect = true;
+            files.Filter = "Txt Files|*.txt";
+            files.FilterIndex = 1;
+
+            if ((bool)files.ShowDialog())
+            {
+                result = files.FileNames.ToList<string>();
+            }
+
+            return result;
+        }
+
         public static SaveFileDialog InstatiateSaveDialog(bool multiple)
         {
             SaveFileDialog save = new SaveFileDialog();
