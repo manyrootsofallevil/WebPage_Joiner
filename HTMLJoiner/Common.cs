@@ -112,5 +112,25 @@ namespace HTMLJoiner
             return output;
         }
 
+        public static void EncryptAppSettings()
+        {
+            // Get the current configuration file.
+            Configuration config =
+                    ConfigurationManager.OpenExeConfiguration(System.Reflection.Assembly.GetExecutingAssembly().Location);
+
+            ConfigurationSection section = config.GetSection("appSettings");
+
+            if (!section.SectionInformation.IsProtected)
+            {
+                // Protect (encrypt)the section.
+                section.SectionInformation.ProtectSection("RsaProtectedConfigurationProvider");
+
+                // Save the encrypted section.
+                section.SectionInformation.ForceSave = true;
+
+                config.Save(ConfigurationSaveMode.Full);
+            }
+        }
+
     }
 }

@@ -59,6 +59,7 @@ namespace HTMLJoiner
 
         public MainWindow()
         {
+            Common.EncryptAppSettings();
             this.ItemList = new ObservableCollection<HTMLPage>();
             fileList.Source = ItemList;
             //this.fileList.SortDescriptions.Add(new SortDescription("HTMLPage.FileName",
@@ -109,7 +110,7 @@ namespace HTMLJoiner
                                    DateTime.Now.ToString("yyyyMMdd"),
                                    ConfigurationManager.AppSettings["author"],
                                    DateTime.Now.ToString("yyyyMMdd"),
-                                   string.Format("\"{0}\\modifiedbeastie.jpg\"",exePath) ));
+                                   string.Format("\"{0}\\modifiedbeastie.jpg\"", exePath)));
 
                         //Should really migrate the whole thing to use MVVM.
                         if (CompletedConversion)
@@ -299,7 +300,7 @@ namespace HTMLJoiner
                 }
             }
 
-        } 
+        }
         #endregion
 
         #region methods
@@ -537,8 +538,14 @@ namespace HTMLJoiner
         {
             return domains.Root.Descendants().Where(x => x.Name == domain).Count() == 1;
         }
-        
+
         #endregion
+
+        private void Button_Click(object sender, RoutedEventArgs e)
+        {
+
+           
+        }
 
 
     }
