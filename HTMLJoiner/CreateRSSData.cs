@@ -19,7 +19,9 @@ namespace HTMLJoiner
 
             foreach (HTMLPage page in pages)
             {
-                xdoc.Root.Add(new XElement("RssItem", new XAttribute("title", page.FileName)
+                string title = page.FileName == null ? page.Title : page.FileName;
+
+                xdoc.Root.Add(new XElement("RssItem", new XAttribute("title", title)
                 , new XAttribute("content", page.Content), new XAttribute("URI", page.Url)));
             }
 

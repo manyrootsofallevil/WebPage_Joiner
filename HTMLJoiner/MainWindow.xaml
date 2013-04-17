@@ -3,7 +3,7 @@
         xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
         xmlns:src="clr-namespace:HTMLJoiner"
          xmlns:control="clr-namespace:LoadingControl.Control"
-        Title="HTML To Mobi" Height="438.458" Width="606.486" ResizeMode="CanMinimize">
+        Title="HTML To Mobi" Height="469.458" Width="606.486" ResizeMode="CanMinimize">
     <Window.TaskbarItemInfo>
         <TaskbarItemInfo Description="HTML to Mobi" ProgressState="Normal"/>
     </Window.TaskbarItemInfo>
@@ -22,9 +22,10 @@
         <Button Name="ClearSelected" Content="Clear Selected" HorizontalAlignment="Left" Margin="129,280,0,0" VerticalAlignment="Top" Width="93" Click="ClearSelected_Click" Visibility="Collapsed"/>
         <CheckBox Name="Learn" Content="Learning Mode" HorizontalAlignment="Left" Margin="248,325,0,0" VerticalAlignment="Top" Width="103" Visibility="Visible"/>
         <CheckBox Name="Convert" Content="Convert to Mobi" HorizontalAlignment="Left" Margin="417,280,0,0" VerticalAlignment="Top" Width="119" Visibility="Hidden"/>
-        <CheckBox Name="Delete" Content="Delete Processed Files" HorizontalAlignment="Left" Margin="248,280,0,0" VerticalAlignment="Top" IsChecked="True"/>
-        <Button Name="Periodical" Content="Create Periodical from WebPages" HorizontalAlignment="Left" Margin="32,361,0,0" VerticalAlignment="Top" Width="190" Click="Periodical_Click"/>
+        <CheckBox Name="Delete" Content="Delete Processed Files" HorizontalAlignment="Left" Margin="248,280,0,0" VerticalAlignment="Top"/>
+        <Button Name="Periodical" Content="Create Periodical from WebPages" HorizontalAlignment="Left" Margin="32,357,0,0" VerticalAlignment="Top" Width="190" Click="Periodical_Click"/>
         <CheckBox x:Name="OpenBook" Content="Open book after conversion" HorizontalAlignment="Left" Margin="248,301,0,0" VerticalAlignment="Top" IsChecked="True"/>
-        <Button x:Name="PeriodicalUrls" Content="Create Periodical from Urls" HorizontalAlignment="Left" Margin="248,361,0,0" VerticalAlignment="Top" Width="190" Click="PeriodicalUrls_Click"/>
+        <Button x:Name="PeriodicalUrls" Content="Create Periodical from Urls" HorizontalAlignment="Left" Margin="32,395,0,0" VerticalAlignment="Top" Width="190" Click="PeriodicalUrls_Click"/>
+        <CheckBox x:Name="Rename" Content="Rename Output File" HorizontalAlignment="Left" Margin="248,357,0,0" VerticalAlignment="Top" Width="165"/>
     </Grid>
 </Window>

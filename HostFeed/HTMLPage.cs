@@ -13,6 +13,14 @@ namespace HostFeed
         private string fileName, directory, extension, url, title, content;
         HtmlDocument docx; // = new HtmlDocument();
 
+
+        public HTMLPage(Tuple<string,string,string> details)
+        {
+            this.url = details.Item1;
+            this.content = details.Item2;
+            this.title = details.Item3;
+        }
+
         public HTMLPage(string fileName, string directory, string extension)
         {
             this.fileName = fileName;

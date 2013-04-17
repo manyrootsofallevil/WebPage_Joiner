@@ -50,6 +50,7 @@ namespace HTMLJoiner
     public partial class MainWindow : Window
     {
         static XDocument domains;
+        string saveFileName = string.Empty;
 
         private CollectionViewSource fileList = new CollectionViewSource();
 
@@ -75,6 +76,7 @@ namespace HTMLJoiner
                 Dispatcher.Invoke((Action)(() => Periodical.IsEnabled = false));
 
                 Host.Start(); e.Result = true;
+
             };
 
             feed.RunWorkerCompleted += (o, e) =>
@@ -95,19 +97,24 @@ namespace HTMLJoiner
                 {
                     if (this.ItemList.Count() > 0)
                     {
-
-
                         string exePath = System.IO.Path.GetDirectoryName(System.Reflection.Assembly.GetExecutingAssembly().Location);
 
                         ImageModifier image = new ImageModifier(string.Format("{0}\\Images\\beastie.jpg", exePath));
 
-                        image.WriteMessageToImage(DateTime.Now.ToLongDateString(), "modifiedbeastie.jpg");
+                        if (System.IO.Path.GetFileNameWithoutExtension(saveFileName).Equals(
+                            DateTime.Now.ToString("yyyyMMdd"), StringComparison.InvariantCultureIgnoreCase))
+                        {
+                            image.WriteMessageToImage(DateTime.Now.ToLongDateString(), "modifiedbeastie.jpg");
+                        }
+                        else
+                        {
+                            image.WriteMessageToImage(System.IO.Path.GetFileNameWithoutExtension(saveFileName), DateTime.Now.ToLongDateString(), "modifiedbeastie.jpg");
+                        }
 
                         CompletedConversion = Common.RunExternalApplication(AppType.EbookConverter,
-                                   string.Format("{0} {1}{2}.mobi --authors {3} --title {4} --cover {5}",
+                                   string.Format("{0} \"{1}\" --authors {2} --title {3} --cover {4}",
                                    ConfigurationManager.AppSettings["newsrecipepath"],
-                                   ConfigurationManager.AppSettings["savefilepath"],
-                                   DateTime.Now.ToString("yyyyMMdd"),
+                                                                      saveFileName,
                                    ConfigurationManager.AppSettings["author"],
                                    DateTime.Now.ToString("yyyyMMdd"),
                                    string.Format("\"{0}\\modifiedbeastie.jpg\"", exePath)));
@@ -115,8 +122,7 @@ namespace HTMLJoiner
                         //Should really migrate the whole thing to use MVVM.
                         if (CompletedConversion)
                         {
-                            Emailer.Hotmail(string.Format("{0}{1}.mobi", ConfigurationManager.AppSettings["savefilepath"],
-                                   DateTime.Now.ToString("yyyyMMdd")));
+                            Emailer.Hotmail(string.Format("{0}", saveFileName ));
 
                             if (Dispatcher.Invoke((Func<bool>)(() => (bool)Delete.IsChecked)))
                             {
@@ -135,8 +141,7 @@ namespace HTMLJoiner
 
                             if (Dispatcher.Invoke((Func<bool>)(() => (bool)OpenBook.IsChecked)))
                             {
-                                Common.RunExternalApplication(AppType.EbookViewer,
-                                    string.Format("{1}{0}.mobi", DateTime.Now.ToString("yyyyMMdd"), ConfigurationManager.AppSettings["savefilepath"]));
+                                Common.RunExternalApplication(AppType.EbookViewer,string.Format("\"{0}\"",saveFileName));
                             }
                             else
                             {
@@ -207,22 +212,49 @@ namespace HTMLJoiner
 
         private void PeriodicalUrls_Click(object sender, RoutedEventArgs e)
         {
+
+
             if (this.ItemList.Count() < 1)
             {
                 try
                 {
 
-                    List<string> files = Common.LoadFiles();
+                    // List<string> files = Common.LoadFiles("Xml Files|*.xml");
+
+                    List<string> files = Common.LoadFiles("Xml Files|*.xml");
+
+                    if (files.Count() > 1 || (bool)Rename.IsChecked)
+                    {
+                        saveFileName = Common.InstatiateSaveDialog();
+                    }
+                    else
+                    {
+                        saveFileName = string.Format("{0}{1:yyyyMMdd}.mobi",
+                            ConfigurationManager.AppSettings["savefilepath"] ,DateTime.Now);
+                    }
 
                     foreach (string file in files)
                     {
-                        using (StreamReader sr = new StreamReader(file))
+
+                        XDocument xdoc = XDocument.Load(file);
+
+                        foreach (var item in xdoc.Root.Descendants())
                         {
-                            while (!sr.EndOfStream)
-                            {
-                                ItemList.Add(new HTMLPage(sr.ReadLine(), true));
-                            }
+
+                            ItemList.Add(
+                                new HTMLPage(
+                                    new Tuple<string, string, string>(
+                                        item.Attribute("URI").Value, item.Attribute("content").Value,
+                                        item.Attribute("title").Value)));
                         }
+
+                        //using (StreamReader sr = new StreamReader(file))
+                        //{
+                        //    while (!sr.EndOfStream)
+                        //    {
+                        //        ItemList.Add(new HTMLPage(sr.ReadLine(), true));
+                        //    }
+                        //}
                     }
 
                 }
@@ -544,7 +576,7 @@ namespace HTMLJoiner
         private void Button_Click(object sender, RoutedEventArgs e)
         {
 
-           
+
         }
 
 

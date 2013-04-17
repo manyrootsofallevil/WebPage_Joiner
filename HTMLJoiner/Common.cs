@@ -33,7 +33,7 @@ namespace HTMLJoiner
             }
         }
 
-        public static List<string> LoadFiles()
+        public static List<string> LoadFiles(string filter)
         {
             List<string> result = null;
 
@@ -41,12 +41,30 @@ namespace HTMLJoiner
             files.AddExtension = true;
             files.CheckFileExists = true;
             files.Multiselect = true;
-            files.Filter = "Txt Files|*.txt";
+            files.Filter = filter; // "Txt Files|*.txt";
             files.FilterIndex = 1;
 
             if ((bool)files.ShowDialog())
             {
                 result = files.FileNames.ToList<string>();
+            }
+
+            return result;
+        }
+
+
+        public static string InstatiateSaveDialog()
+        {
+            string result = string.Empty;
+
+            SaveFileDialog save = new SaveFileDialog();
+            save.AddExtension = true;
+            save.CheckPathExists = true;
+            save.Filter = "Mobi Files|*.mobi";
+
+            if ((bool)save.ShowDialog())
+            {
+                result = save.FileName;    
             }
 
             return result;
@@ -71,12 +89,15 @@ namespace HTMLJoiner
 
         public static bool RunExternalApplication(AppType app, string arguments)
         {
+
+            Trace.TraceInformation(string.Format("RunExternalApplication {0} {1}.", app.ToString(), arguments));
+
             bool output = false;
 
             switch (app)
             {
                 case AppType.Browser:
-                    Process.Start(ConfigurationManager.AppSettings["Browser"], arguments);                   
+                    Process.Start(ConfigurationManager.AppSettings["Browser"], arguments);
                     break;
                 case AppType.EbookConverter:
                     //Process.Start(, arguments);
@@ -95,17 +116,20 @@ namespace HTMLJoiner
                     while (!proc.StandardOutput.EndOfStream)
                     {
                         string line = proc.StandardOutput.ReadLine().ToLower();
+
+                        Trace.TraceInformation(line,"HTMLJoiner");
+
                         if (line.Contains("output saved"))
                         {
-                            output=true;
+                            output = true;
                         }
                     }
                     break;
                 case AppType.EbookViewer:
-                    Process.Start(ConfigurationManager.AppSettings["EbookViewer"],arguments);
+                    Process.Start(ConfigurationManager.AppSettings["EbookViewer"], arguments);
                     break;
 
-                   
+
 
             }
             //TODO: Have a look at this to get the ouput from ebook converter process
@@ -114,6 +138,8 @@ namespace HTMLJoiner
 
         public static void EncryptAppSettings()
         {
+
+            Trace.TraceInformation("Encrypting App Settings");
             // Get the current configuration file.
             Configuration config =
                     ConfigurationManager.OpenExeConfiguration(System.Reflection.Assembly.GetExecutingAssembly().Location);
@@ -129,6 +155,10 @@ namespace HTMLJoiner
                 section.SectionInformation.ForceSave = true;
 
                 config.Save(ConfigurationSaveMode.Full);
+            }
+            else
+            {
+                Trace.TraceInformation("App Settings already encrypted");
             }
         }
 
