@@ -248,6 +248,12 @@ namespace HTMLJoiner
                                         item.Attribute("title").Value)));
                         }
 
+                        File.Move(file,
+                            string.Format(@"{0}\{1}_processed{2}",
+                            System.IO.Path.GetDirectoryName(file),
+                            System.IO.Path.GetFileNameWithoutExtension(file),
+                            System.IO.Path.GetExtension(file)));
+
                         //using (StreamReader sr = new StreamReader(file))
                         //{
                         //    while (!sr.EndOfStream)
